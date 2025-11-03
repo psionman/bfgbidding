@@ -3,8 +3,8 @@
 """
 
 import inspect
-from .bidding import Bid, Pass
-from .hand import Hand
+from bfgbidding.bidding import Bid, Pass
+from bfgbidding.hand import Hand
 
 inspection = inspect.currentframe
 
