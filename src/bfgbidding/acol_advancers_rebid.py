@@ -3,6 +3,9 @@
 """
 
 import inspect
+
+from bridgeobjects import Board, Suit, Card
+
 from bfgbidding.bidding import Bid, Pass
 from bfgbidding.hand import Hand
 
@@ -11,7 +14,7 @@ inspection = inspect.currentframe
 
 class AdvancersRebid(Hand):
     """BfG AdvancersRebid class."""
-    def __init__(self, hand_cards, board):
+    def __init__(self, hand_cards: list[Card], board: Board) -> None:
         super(AdvancersRebid, self).__init__(hand_cards, board)
         if len(self.bid_history) >= 6:
             self.overcaller_bid_one = Bid(self.bid_history[-6], '')
