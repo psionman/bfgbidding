@@ -1,5 +1,10 @@
 # Version History
 
+Version 0.1.2 - 05 November 2025
+
+1. Refactor advancers_rebid
+------------------------------
+
 Version 0.1.0 - 15 October 2025
 
 1. Restructure for uv 
@@ -143,6 +148,7 @@ Version 0.0.0 1 Feb 2023
 1. Initial load
 
 ------
+
 
 
 
