@@ -5,16 +5,21 @@
 import sysconfig
 from pathlib import Path
 import json
-from termcolor import cprint
 
 from bridgeobjects import SUITS
+from bfgbidding.constants import APP_NAME
+from bfgbidding.logger import app_logger
 
-MODULE_COLOUR = 'blue'
+logger = app_logger()
 
-VIRTUAL_ENV_DIR = sysconfig.get_path('purelib')
-PACKAGE = 'bfgbidding'
-COMMENT_DATA_DIRECTORY = 'comment_data'
-DATA_PATH = Path(Path(__file__).parent, COMMENT_DATA_DIRECTORY)
+comment_data_dir = 'comment_data'
+
+DATA_PATH = Path(Path(__file__).parent, comment_data_dir)
+
+venv_dir = sysconfig.get_path('purelib')
+venv_data_path = Path(venv_dir, APP_NAME, comment_data_dir)
+# Use if testing a venv version
+# DATA_PATH = venv_data_path
 
 COMMENT_XREF_FILE = 'comment_xref.json'
 STRATEGY_XREF_FILE = 'strategy_xref.json'
@@ -47,8 +52,7 @@ def _read_json(path):
         with open(path, 'r') as f_json:
             return json.load(f_json)
     except FileNotFoundError:
-        cprint('Missing json file', 'red')
-        cprint(f'{path}', 'red')
+        logger.error(f'Missing json file: {path}')
 
 
 comment_xrefs = _read_json(Path(DATA_PATH, COMMENT_XREF_FILE))
@@ -65,26 +69,22 @@ def comment_id(call_id: str) -> str:
 def comment_html(call_id: str) -> str:
     """Return the comment associated with the call_id."""
     comment_id = comment_xrefs[call_id]
-    comment = convert_text_to_html(comments[comment_id])
-    return comment
+    return convert_text_to_html(comments[comment_id])
 
 
 def strategy_html(call_id: str) -> str:
     """Return the strategy associated with the call_id."""
     comment_id = comment_xrefs[call_id]
     if comment_id not in strategy_xrefs:
-        cprint(f'---> no strategy_xref record for {comment_id}!', 'red')
+        logger.warning(f'---> no strategy_xref record for {comment_id}!')
         return '0000'
     strategy_id = strategy_xrefs[comment_id]
-    strategy = convert_text_to_html(strategies[strategy_id])
-    return strategy
+    return convert_text_to_html(strategies[strategy_id])
 
 
 def _tag(colour: str, end_tag: bool = False) -> str:
     """Return a html tag of the colour."""
-    slash = ''
-    if end_tag:
-        slash = '/'
+    slash = '/' if end_tag else ''
     return f'<{slash}{colour}>'
 
 
@@ -93,8 +93,9 @@ def convert_text_to_html(text: str) -> str:
     html = text
     for colour in ['red', 'blue', 'green', 'yellow']:
         if _tag(colour) in text:
-            new_text = '<span style="color:%s">' % colour
-            html = html.replace(_tag(colour), new_text)
+            html = html.replace(
+                _tag(colour),
+                f'<span style="color:{colour}">')
         if _tag(colour, True) in text:
             html = html.replace(_tag(colour, True), '</span>')
     for suit in SUITS:

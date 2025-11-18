@@ -3,28 +3,28 @@
 """
 
 import inspect
-
-from bridgeobjects import Board, Card, Call, Suit
-
-from bfgbidding.bidding import Bid, Pass, Double
-from bfgbidding.hand import Hand
+from .bidding import Bid, Pass, Double
+from .hand import Hand
+from .tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_advancers_bid']
 
 # uncomment line around 30 for generating compliance tests. Affects hand 361!!!
 
 
 class AdvancersBid(Hand):
     """BfG AdvancersBid class."""
-    def __init__(self, hand_cards: list[Card], board: Board):
+    def __init__(self, hand_cards, board):
         super().__init__(hand_cards, board)
         self.overcallers_suit_holding = 0
         if self.overcaller_bid_one.is_suit_call:
-            denomination = self.overcaller_bid_one.denomination
-            self.overcallers_suit_holding = self.suit_holding[denomination]
-        self.trace = 0
+            self.overcallers_suit_holding = self.suit_holding[
+                self.overcaller_bid_one.denomination]
+        self.trace = trace(TRACER_CODE)
 
-    def suggested_bid(self) -> Call:
+    def suggested_bid(self):
         """Direct control to relevant method and return a Bid object."""
         if self._overcall_bid_at_three_level():
             bid = self._respond_to_three_level()
@@ -54,15 +54,14 @@ class AdvancersBid(Hand):
             bid = self._bid_nt()
         elif self.hcp >= 12:
             bid = self._long_suit_bid()
-        elif (self.overcaller_bid_one.is_suit_call
-                and self.overcallers_suit_holding <= 3):
+        elif (self.overcaller_bid_one.is_suit_call and self.overcallers_suit_holding <= 3):
             bid = Pass('4125')
         else:
             bid = Pass('4004')
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_three_level(self) -> Call:
+    def _respond_to_three_level(self):
         """Respond to 3 level bid."""
         jump_bid = self.is_jump(self.opener_bid_one, self.overcaller_bid_one)
         if self.overcaller_bid_one.is_game:
@@ -72,17 +71,14 @@ class AdvancersBid(Hand):
         elif self._has_ten_points_and_stoppers():
             bid = self.nt_bid(3, '4007')
         elif self._can_bid_to_game(self.overcaller_bid_one.denomination):
-            bid = self.bid_to_game(
-                self.overcaller_bid_one.denomination, '4008')
+            bid = self.bid_to_game(self.overcaller_bid_one.denomination, '4008')
         elif self.hcp >= 10 and self.overcallers_suit_holding >= 4:
-            bid = self.next_level_bid(
-                self.overcaller_bid_one.denomination, '4009')
-        elif (self.hcp <= 12 and self.opener_bid_one.level >= 2
-                and not jump_bid):
+            bid = self.next_level_bid(self.overcaller_bid_one.denomination, '4009')
+        elif self.hcp <= 12 and self.opener_bid_one.level >= 2 and not jump_bid:
             bid = Pass('4010')
         elif self._has_eight_points_and_stoppers():
             bid = self.nt_bid(3, '4011')
-        elif ((self.overcallers_suit_holding <= 2 and
+        elif ((self.overcallers_suit_holding <=2 and
               self.hcp <= 8) or
               not self.stoppers_in_bid_suits):
             bid = Pass('4124')
@@ -99,7 +95,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _overcaller_has_doubled(self) -> Call:
+    def _overcaller_has_doubled(self):
         """Bid after partner has doubled."""
         if self._has_eleven_points_balanced_and_responder_has_bid_game():
             bid = Double('4013')
@@ -112,7 +108,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _overcaller_doubled_one_nt(self) -> Call:
+    def _overcaller_doubled_one_nt(self):
         """Bid after overcaller has doubled opener's 1NT."""
         if 4 <= self.hcp <= 7:
             bid = self._long_suit_bid()
@@ -128,7 +124,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _overcaller_doubled_one_nt_responder_bid(self) -> Call:
+    def _overcaller_doubled_one_nt_responder_bid(self):
         """Bid after overcaller has doubled opener's 1NT, responder has bid."""
         if self.is_semi_balanced and self.stoppers_in_bid_suits:
             bid = self._semi_balanced_stoppers()
@@ -137,7 +133,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _semi_balanced_stoppers(self) -> Call:
+    def _semi_balanced_stoppers(self):
         """Return bid if semi-balanced with stoppers in bid suits."""
         if self.hcp <= 9 and self.nt_level <= 2:
             bid = self.nt_bid(2, '4017')
@@ -148,7 +144,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _overcaller_has_doubled_weak(self) -> Call:
+    def _overcaller_has_doubled_weak(self):
         """Bid after partner has doubled with a weak hand."""
         if self._weak_and_responder_has_bid():
             bid = Pass('4019')
@@ -161,7 +157,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _overcaller_has_doubled_weak_balanced(self) -> Call:
+    def _overcaller_has_doubled_weak_balanced(self):
         """Bid after partner has doubled with a weak balanced hand."""
         major_suit = self._find_four_card_major()
         if self.opponents_at_game:
@@ -187,7 +183,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _support_for_overcaller(self) -> Call:
+    def _support_for_overcaller(self):
         """Returns bid in partner's suit relevant to points."""
         if self._has_thirteen_points_and_five_card_major():
             bid = self._long_suit_bid()
@@ -199,7 +195,7 @@ class AdvancersBid(Hand):
             bid = self._support_for_overcaller_level_two()
         elif self.hcp >= 12 and not self.bidding_above_game:
             bid = self.next_level_bid(self.overcaller_suit_one, '4028')
-        elif self._has_strength_and_support_to_overcall_three_level_bid():
+        elif self._has_strength_and_support_for_overcallers_three_level_bid():
             bid = self.next_level_bid(self.overcaller_suit_one, '4029')
         elif self.overcaller_bid_one.is_game:
             bid = Pass('4030', True)
@@ -210,7 +206,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _bid_after_nt(self) -> Call:
+    def _bid_after_nt():
         """ Return bid after overcaller bids NT."""
         if self.hcp <= 8:
             bid = Pass('4121')
@@ -219,7 +215,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _support_for_overcaller_level_one(self) -> Call:
+    def _support_for_overcaller_level_one(self):
         """Returns bid in partner's suit after level one bid."""
         suit_to_bid = self.overcaller_bid_one.denomination
         if self._has_ten_points_overcaller_bid_minor():
@@ -239,15 +235,13 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _bid_nt(self) -> Call:
+    def _bid_nt(self):
         """Return a NT bid."""
         if self.hcp >= 13 and self.nt_level <= 3:
             bid = self.nt_bid(3, '4035')
         elif self.hcp >= 12 and self.nt_level <= 2:
             bid = self.nt_bid(2, '4036')
-        elif (self.is_semi_balanced
-                and self.stoppers_in_bid_suits
-                and self.nt_level <= 1):
+        elif self.is_semi_balanced and self.stoppers_in_bid_suits and self.nt_level <= 1:
             bid = self.nt_bid(1, '4037')
         elif self.suit_holding[self.overcaller_suit_one] <= 3:
             bid = Pass('4153')
@@ -256,7 +250,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _support_for_overcaller_level_two(self) -> Call:
+    def _support_for_overcaller_level_two(self):
         """Returns bid in partner's suit after level two bid."""
         suit_to_bid = self.overcaller_bid_one.denomination
         hand_value_points = self._get_hand_value_points(suit_to_bid)
@@ -270,7 +264,7 @@ class AdvancersBid(Hand):
                 bid_level = 4
             else:
                 bid_level = 3
-            bid = self.suit_bid(bid_level, suit_to_bid, '4041', True)
+            bid = self.suit_bid(bid_level, self.overcaller_bid_one.denomination, '4041', True)
         elif self._good_support_for_overcaller():
             bid = self.suit_bid(4, suit_to_bid, '4042', True)
         elif self.hcp >= 13 and bid_level <= 4:
@@ -286,7 +280,7 @@ class AdvancersBid(Hand):
             bid = self.suit_bid(bid_level, suit_to_bid, '4045', True)
         elif self.nt_level >= 3 and self.hcp <= 10:
             bid = Pass('4127', True)
-        elif (self.hcp <= 12 and self.suit_holding[suit_to_bid] <= 3):
+        elif self.hcp <= 12 and self.suit_holding[self.overcaller_bid_one.denomination] <= 3:
             bid = Pass('4147', True)
         elif self.opponents_at_game:
             bid = Pass('4154', True)
@@ -297,7 +291,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _no_support_stoppers(self) -> Call:
+    def _no_support_stoppers(self):
         """Return bid in NT relevant to points."""
         if self.overcaller_bid_one.level == 1:
             bid = self._no_support_stoppers_level_one()
@@ -308,7 +302,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _no_support_stoppers_level_one(self) -> Call:
+    def _no_support_stoppers_level_one(self):
         """Return bid in NT relevant to points at level 1."""
         level = self.nt_level
         # Stoppers already checked
@@ -325,7 +319,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _no_support_stoppers_level_two(self) -> Call:
+    def _no_support_stoppers_level_two(self):
         """Return bid in NT relevant to points at level 2."""
         level = self.nt_level
         if self.hcp in range(9, 14) and level <= 2:
@@ -334,15 +328,14 @@ class AdvancersBid(Hand):
             bid = self.nt_bid(3, '4053')
         elif self.hcp <= 15 and self.shape[0] <= 6 and self.nt_level >= 2:
             bid = Pass('4054')
-        elif (self.hcp < 16
-                and self.suit_holding[self.overcaller_suit_one] <= 4):
+        elif self.hcp < 16 and self.suit_holding[self.overcaller_suit_one] <= 4:
             bid = Pass('4161')
         else:
             bid = Pass('4135')
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _long_suit_bid(self) -> Call:
+    def _long_suit_bid(self):
         """Return bid based on own long suit."""
         if self.overcaller_bid_one.is_double:
             bid = self._bid_after_double()
@@ -366,8 +359,7 @@ class AdvancersBid(Hand):
         elif self._has_seven_card_suit_and_shortage_in_overcallers_suit():
             bid = self.next_level_bid(self.longest_suit, '4056')
         elif self.hcp >= 6 and self.overcallers_suit_holding >= 3:
-            bid = self.next_level_bid(
-                self.overcaller_bid_one.denomination, '4057')
+            bid = self.next_level_bid(self.overcaller_bid_one.denomination, '4057')
         elif self.suit_holding[self.overcaller_bid_one.denomination] <= 2:
             bid = Pass('4058')
         else:
@@ -375,7 +367,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _bid_after_double(self) -> Call:
+    def _bid_after_double(self):
         """Show long suit after overcaller has doubled."""
         suit = self._select_suit_after_double()
         (level, comment) = self._bid_after_double_get_level(suit)
@@ -414,7 +406,7 @@ class AdvancersBid(Hand):
             bid = self.next_level_bid(suit, '4067')
         elif (self._overcaller_has_doubled_one_nt() and
               self.right_hand_bid.is_value_call and
-              self.shape[0] >= 5):
+              self.shape[0] >=5):
             bid = self.next_level_bid(self.longest_suit, '4068')
         elif self.long_suit in self.opponents_suits:
             bid = Pass('4069')
@@ -423,7 +415,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _hold_openers_suit(self) -> Call:
+    def _hold_openers_suit(self):
         """Return bid when holding opener's suit."""
         suit = self._select_suit_after_double()
         if self._is_balanced_and_holds_openers_suit():
@@ -455,32 +447,28 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _long_suit_after_suit(self) -> Call:
+    def _long_suit_after_suit(self):
         """Show long suit after overcaller has bid suit."""
         if self._cannot_bid_at_this_level():
             bid = Pass('4073')
-        elif (self.longest_suit.is_minor
-                and self.is_balanced and self.nt_level <= 2):
+        elif self.longest_suit.is_minor and self.is_balanced and self.nt_level <= 2:
             bid = self.nt_bid(2, '4074')
         elif self._is_strong_with_good_six_card_major():
             bid = self.bid_to_game(self.longest_suit, '4075')
         elif self._is_strong_with_good_seven_card_minor():
             bid = self.bid_to_game(self.longest_suit, '4076')
         elif self._has_support_for_overcaller_and_better_points():
-            bid = self.next_level_bid(
-                self.overcaller_bid_one.denomination, '4077')
+            bid = self.next_level_bid(self.overcaller_bid_one.denomination, '4077')
         elif self._can_bid_own_suit_after_suit():
             if self.hcp >= 15:
-                bid = self.next_level_bid(
-                    self.longest_suit, '4078', raise_level=1)
+                bid = self.next_level_bid(self.longest_suit, '4078', raise_level=1)
             else:
                 bid = self.next_level_bid(self.longest_suit, '4079')
         elif self._is_balanced_after_overcallers_minor():
             # Includes point count
             bid = self.next_nt_bid('4080')
         elif self.hcp >= 11 and self.overcallers_suit_holding >= 3:
-            bid = self.next_level_bid(
-                self.overcaller_bid_one.denomination, '4081')
+            bid = self.next_level_bid(self.overcaller_bid_one.denomination, '4081')
         elif (self.overcaller_bid_one.level >= 2 and
               self.hcp >= 6 and
               self.shape[0] >= 6 and
@@ -495,7 +483,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_nt(self) -> Call:
+    def _respond_to_nt(self):
         """Respond to a NT overcall."""
         if self.is_semi_balanced:
             bid = self._respond_to_nt_semi_balanced()
@@ -508,7 +496,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_nt_semi_balanced(self) -> Call:
+    def _respond_to_nt_semi_balanced(self):
         """Respond to a NT overcall is semi_balanced."""
         if self.overcaller_bid_one.name == '1NT':
             bid = self._respond_to_one_nt_semi_balanced()
@@ -519,7 +507,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_one_nt_semi_balanced(self) -> Call:
+    def _respond_to_one_nt_semi_balanced(self):
         """Respond to 1NT overcall is semi_balanced."""
         if self._can_bid_stayman_after_overcallers_one_nt():
             bid = self.club_bid(2, '4086')
@@ -540,7 +528,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_two_nt_semi_balanced(self) -> Call:
+    def _respond_to_two_nt_semi_balanced(self):
         """Respond to 2NT overcall is semi_balanced."""
         if self._has_eight_points_and_five_card_major():
             bid = self.next_level_bid(self.five_card_major_suit, '4093')
@@ -553,11 +541,9 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_two_nt_semi_balanced_weak(self) -> Call:
+    def _respond_to_two_nt_semi_balanced_weak(self):
         """Respond to 2NT overcall is semi_balanced with weak hand."""
-        if (self.hcp >= 4
-                and self.nt_level <= 3
-                and self.opener_bid_one.level == 1):
+        if self.hcp >= 4 and self.nt_level <= 3 and self.opener_bid_one.level == 1:
             bid = self.nt_bid(3, '4096')
         elif self.hcp <= 10 and self.opener_bid_one.level >= 2:
             bid = Pass('4097')
@@ -568,7 +554,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_nt_distributional(self) -> Call:
+    def _respond_to_nt_distributional(self):
         """Respond to a NT overcall if distributional."""
         if (self.overcaller_bid_one.name == '2NT' and
                 self.opener_bid_one.level == 1):
@@ -580,13 +566,13 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_nt_after_weak_2(self) -> Call:
+    def _respond_to_nt_after_weak_2(self):
         """Return bid after opener bid weak 2"""
         suit = self._select_suit()
         bid = self.next_level_bid(suit)
-        if (bid.is_minor and bid.level == 2
-                and self.stoppers_in_bid_suits
-                and self.hcp >= 8):
+        if bid.is_minor and bid.level == 2 and self.stoppers_in_bid_suits and self.hcp>= 8:
+        # if self.stoppers_in_bid_suits:
+        # if bid.name == '2C':
             bid = self._respond_to_nt_distributional_with_clubs()
         elif (self.suit_length(suit) >= 5 and
                 suit not in self.opponents_suits and
@@ -603,8 +589,7 @@ class AdvancersBid(Hand):
                 bid = Pass('4137')
             else:
                 bid = Pass('4101')
-        elif (self.opener_bid_one.level == 2
-                and self.overcaller_bid_one.name == '2NT'):
+        elif self.opener_bid_one.level == 2 and self.overcaller_bid_one.name == '2NT':
             bid = self._nt_after_weak_opening()
         elif self.hcp <= 8:
             bid = Pass('4102')
@@ -615,15 +600,13 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _nt_after_weak_opening(self) -> Call:
+    def _nt_after_weak_opening(self):
         """Return bid after overcaller bids NT after weak 2 opening."""
         if self.hcp <= 6 and self.bid_history[-1] == 'P':
             bid = Pass('4103')
-        elif (self.hcp >= 8
-                and self.four_card_major_suit
-                and self.next_level(self.club_suit) <= 3):
+        elif self.hcp >= 8 and self.four_card_major_suit and self.next_level(self.club_suit) <= 3:
             bid = self.next_level_bid(self.club_suit, '4104')
-        elif self.shape[0] >= 6 and self.hcp >= 5 and self.nt_level <= 3:
+        elif  self.shape[0] >= 6 and self.hcp >= 5 and  self.nt_level <= 3:
             bid = self.next_level_bid(self.longest_suit, '4132')
         elif self.hcp >= 9 and self.nt_level <= 3:
             bid = self.nt_bid(3, '4105')
@@ -634,7 +617,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_nt_distributional_with_clubs(self) -> Call:
+    def _respond_to_nt_distributional_with_clubs(self):
         """Respond to a NT overcall if best suit is clubs."""
         if self.hcp >= 10:
             bid = self.nt_bid(3, '4133')
@@ -645,7 +628,7 @@ class AdvancersBid(Hand):
         self.tracer(__name__, inspection(), bid, self.trace)
         return bid
 
-    def _respond_to_nt_distributional_overcaller_jumped(self) -> Call:
+    def _respond_to_nt_distributional_overcaller_jumped(self):
         """Respond to a jump NT overcall is distributional."""
         if self._can_bid_five_card_major_at_level_three():
             bid = self.suit_bid(3, self.longest_suit, '4109')
@@ -658,7 +641,7 @@ class AdvancersBid(Hand):
 
     # Various utility functions
 
-    def _fourth_suit_bid(self, suit: Suit) -> bool:
+    def _fourth_suit_bid(self, suit):
         """Return True if suit is fourth suit bid."""
         value = False
         suits = [0, 0, 0, 0]
@@ -671,9 +654,9 @@ class AdvancersBid(Hand):
             value = True
         return value
 
-    def _select_suit(self, force_major=False) -> Suit:
+    def _select_suit(self, force_major=False):
         """Return best suit to bid."""
-        (suit_one, suit_two) = self._top_two_unbid_suits()
+        suit_one, suit_two = self._top_two_unbid_suits()
         suit_one_holding = self.suit_length(suit_one)
         suit_two_holding = self.suit_length(suit_two)
         if (suit_one_holding == suit_two_holding or
@@ -692,15 +675,14 @@ class AdvancersBid(Hand):
                 suit = self.cheaper_suit(suit_one, suit_two)
         else:
             suit = suit_one
-        if (suit == self.opener_suit_one
-                or suit == self.responder_bid_one.denomination):
+        if suit == self.opener_suit_one or suit == self.responder_bid_one.denomination:
             if suit_two_holding >= 0:
                 suit = suit_two
             else:
                 suit = self.no_trumps
         return suit
 
-    def _top_two_unbid_suits(self) -> tuple[Suit]:
+    def _top_two_unbid_suits(self):
         """Return two longest unbid suits."""
         suit_index = 0
         suit_offset = 1
@@ -718,10 +700,11 @@ class AdvancersBid(Hand):
                 suit_offset += 1
             else:
                 found = True
-        return (suit_one, suit_two)
+        return suit_one, suit_two
 
-    def _can_bid_to_game(self, suit: Suit) -> bool:
+    def _can_bid_to_game(self, suit):
         """Return True if conditions are met for raise to game."""
+        value = False
         sufficient_points = (self.hcp >= 8 or
                              (self.hcp >= 7 and self.shape[3] <= 1))
         if (self.suit_length(suit) >= 2 and
@@ -729,10 +712,10 @@ class AdvancersBid(Hand):
                 not self.is_insufficient_bid(self.bid_to_game(suit)) and
                 (self.opener_bid_one.level == 1 or
                  suit.is_major)):
-            return True
-        return False
+            value = True
+        return value
 
-    def _find_level_for_major_raise(self, major_suit: Suit) -> int:
+    def _find_level_for_major_raise(self, major_suit):
         """Return the appropriate raise level for major suit  support."""
         if self.next_level(major_suit) >= 4:
             raise_level = 0
@@ -744,7 +727,7 @@ class AdvancersBid(Hand):
             raise_level = 0
         return raise_level
 
-    def _find_four_card_major(self) -> Suit:
+    def _find_four_card_major(self):
         """Return an unbid four card major."""
         if self.spades >= 4 and self.spade_suit not in self.opponents_suits:
             suit = self.spade_suit
@@ -755,7 +738,8 @@ class AdvancersBid(Hand):
             suit = None
         return suit
 
-    def _leave_double(self) -> bool:
+    def _leave_double(self):
+        value = False
         suit = self._select_suit()
         openers_suit = self.opener_bid_one.denomination
         if (self.opener_bid_one.level > 1 and
@@ -764,10 +748,10 @@ class AdvancersBid(Hand):
                 self.suit_length(openers_suit) >= 4 and
                 self.hcp >= 10 and
                 self.responder_bid_one.is_pass):
-            return True
-        return False
+            value = True
+        return value
 
-    def _get_hand_value_points(self, suit: Suit) -> int:
+    def _get_hand_value_points(self, suit):
         """Return hand value points."""
         suit_cards = self.suit_length(suit)
         hand_value_points = (self.hcp +
@@ -777,59 +761,63 @@ class AdvancersBid(Hand):
             hand_value_points += 1
         return hand_value_points
 
-    def _select_suit_after_double(self) -> Suit:
+    def _select_suit_after_double(self):
         five_four = (self.five_four and
                      (self.longest_suit in self.opponents_suits or
                       self.second_suit in self.opponents_suits))
         if self.five_five:
             if (self.longest_suit.rank < self.second_suit.rank and
                     self.second_suit not in self.opponents_suits):
-                return self.second_suit
-            if self.longest_suit not in self.opponents_suits:
-                return self.longest_suit
-            return self.second_suit
+                suit = self.second_suit
+            elif self.longest_suit not in self.opponents_suits:
+                suit = self.longest_suit
+            else:
+                suit = self.second_suit
         elif five_four:
             if self.longest_suit not in self.opponents_suits:
-                return self.longest_suit
-            return self.second_suit
-        return self._select_suit(force_major=True)
+                suit = self.longest_suit
+            else:
+                suit = self.second_suit
+        else:
+            suit = self._select_suit(force_major=True)
+        return suit
 
-    def _suit_bid_allowed(self, level: int, suit: Suit) -> bool:
+    def _suit_bid_allowed(self, level, suit):
         """Return True if a suit bid is allowed."""
         double_forcing = Bid(self.bid_history[-1]).is_pass
         sufficient_points = (self.hcp >= 9 or level <= 2)
-        level_low_enough = (self.next_level(suit) <= 4
-                            and level >= self.next_level(suit))
+        level_low_enough = (self.next_level(suit) <= 4 and level >= self.next_level(suit))
 
         if not double_forcing and self.suit_length(suit) < 4:
             return False
-        if double_forcing and suit not in self.opponents_suits:
+        elif double_forcing and suit not in self.opponents_suits:
             return True
-        if (sufficient_points and
+        elif (sufficient_points and
                 level_low_enough and
                 suit not in self.opponents_suits):
             return True
         return False
 
-    def _bid_after_double_get_level(self, suit: Suit) -> tuple[int, str]:
+    def _bid_after_double_get_level(self, suit):
         """Return level and comment with a long suit after a double."""
         if self.opener_bid_one.level == 1:
             (level, comment) = self._bid_after_double_level_one(suit)
             if level:
                 return (level, comment)
-            return (self.next_level(suit), '4111')
-        if self.opener_bid_one.level == 2:
+            else:
+                return (self.next_level(suit), '4111')
+        elif self.opener_bid_one.level == 2:
             return self._bid_after_double_level_two(suit)
-        if self.opener_bid_one.level == 3:
+        elif self.opener_bid_one.level == 3:
             return self._bid_after_double_level_three(suit)
 
-        if self.opener_bid_one.level == 4:
+        elif self.opener_bid_one.level == 4:
             return (self.next_level(suit), '4117')
-        return (self.next_level(suit), '4118')
+        else:
+            return (self.next_level(suit), '4118')
 
-    def _bid_after_double_level_one(self, suit: Suit) -> tuple[int, str]:
-        """Return level and comment with a
-        long suit after a double at level 1."""
+    def _bid_after_double_level_one(self, suit):
+        """Return level and comment with a long suit after a double at level 1."""
         level = self.next_level(suit)
         if self.responder_bid_one.is_value_call:
             if self.hcp >= 12:
@@ -837,24 +825,22 @@ class AdvancersBid(Hand):
             return (level, '4112')
         if (self.hcp >= 13 and suit.is_major and self.suit_length(suit) >= 5):
             return (4, '4114')
-        if self.hcp >= 12 and not self.stoppers_in_bid_suits:
+        elif self.hcp >= 12 and not self.stoppers_in_bid_suits:
             return (level + 2, '4119')
-        if self.hcp >= 9 and level == 1:
+        elif self.hcp >= 9 and level == 1:
             return (level + 1, '4120')
         return (level, '4113')
 
-    def _bid_after_double_level_two(self, suit: Suit) -> tuple[int, str]:
-        """Return level and comment with a
-        long suit after a double at level 2."""
+    def _bid_after_double_level_two(self, suit):
+        """Return level and comment with a long suit after a double at level 2."""
         level = self.next_level(suit)
         level = max(2, level)
         if self.hcp >= 8:
             level = max(3, level)
         return (level, '4115')
 
-    def _bid_after_double_level_three(self, suit: Suit) -> tuple[int, str]:
-        """Return level and comment with a
-        long suit after a double at level 3."""
+    def _bid_after_double_level_three(self, suit):
+        """Return level and comment with a long suit after a double at level 3."""
         level = self.next_level(suit)
         level = max(3, level)
         if self.hcp >= 8:
@@ -863,24 +849,23 @@ class AdvancersBid(Hand):
 
     # Various boolean functions
 
-    def _overcall_bid_at_three_level(self) -> bool:
+    def _overcall_bid_at_three_level(self):
         """Return True if overcaller has bid at level 3."""
         return (self.overcaller_bid_one.level >= 3 and
                 self.opener_bid_one.level != 3)
 
-    def _has_biddable_eight_card_suit(self) -> bool:
+    def _has_biddable_eight_card_suit(self):
         """Return True if with biddable 8 card suit."""
-        next_level = self.next_level(self.longest_suit)
         return (self.shape[0] == 8 and
-                next_level <= self.longest_suit.game_level and
+                self.next_level(self.longest_suit) <= self.longest_suit.game_level and
                 self.longest_suit not in self.opponents_suits)
 
-    def _has_three_card_support_for_overcallers_major(self) -> bool:
+    def _has_three_card_support_for_overcallers_major(self):
         """Return True if 3 card support for overcaller's major."""
         return (self.overcaller_bid_one.is_major and
                 self.overcallers_suit_holding >= 3)
 
-    def _is_weak_no_support_for_overcaller(self) -> bool:
+    def _is_weak_no_support_for_overcaller(self):
         """Return True if weak and no support for overcaller."""
         return (self.bid_history[-1] == 'P' and
                 8 <= self.hcp <= 9 and
@@ -889,7 +874,7 @@ class AdvancersBid(Hand):
                 self.nt_level == 1 and
                 self.stoppers_in_bid_suits)
 
-    def _has_biddable_suit(self) -> bool:
+    def _has_biddable_suit(self):
         """Return True if hand has a biddable suit."""
         biddable_six_card_suit = (self.shape[0] >= 6 and
                                   self.overcallers_suit_holding <= 2)
@@ -897,17 +882,14 @@ class AdvancersBid(Hand):
                                 self.overcaller_bid_one.is_suit_call and
                                 self.overcaller_bid_one.level == 2 and
                                 self.hcp >= 10)
-        longest_suit = self.suit_length(self.longest_suit)
-        if (longest_suit == self.suit_length(self.second_suit) and
+        if (self.suit_length(self.longest_suit) == self.suit_length(self.second_suit) and
                 self.second_suit == self.overcaller_bid_one.denomination):
             my_suit = self.second_suit
         else:
             my_suit = self.longest_suit
         has_own_five_card_suit = (self.overcallers_suit_holding <= 1 and
                                   self.shape[0] >= 5)
-        has_own_five_card_major = (self.hcp >= 8
-                                   and self.shape[0] >= 5
-                                   and my_suit.is_major)
+        has_own_five_card_major = (self.hcp >= 8 and self.shape[0] >= 5 and my_suit.is_major)
         can_bid_own_suit = (self.hcp >= 8 and
                             self.shape[0] >= 5 and
                             self.responder_bid_one.is_value_call and
@@ -920,15 +902,15 @@ class AdvancersBid(Hand):
                 has_own_five_card_major or
                 has_own_five_card_suit)
 
-    def _can_bid_nt_opposition_has_no_fit(self) -> bool:
+    def _can_bid_nt_opposition_has_no_fit(self):
         """Return True if opposition weak or no fit can bid nt."""
         return (self.stoppers_in_bid_suits and
                 (not self.responder_bid_one.is_pass or
-                 self.hcp >= 16) and
+                self.hcp >= 16) and
                 (self.opener_suit_one != self.responder_bid_one.denomination or
-                 self.responder_bid_one.level <= 2))
+                self.responder_bid_one.level <= 2))
 
-    def _can_support_overcaller(self) -> bool:
+    def _can_support_overcaller(self):
         """Return True if can support overcaller."""
         if self.overcaller_has_jumped:
             support_for_overcaller = 2
@@ -936,40 +918,40 @@ class AdvancersBid(Hand):
             support_for_overcaller = 3
         return self.overcallers_suit_holding >= support_for_overcaller
 
-    def _has_opening_values_can_bid_nt(self) -> bool:
+    def _has_opening_values_can_bid_nt(self):
         """Return True if opening values and can bid nt."""
         return (self.is_balanced and
                 self.hcp >= 11 and
                 not self.responder_bid_one.is_value_call and
                 self.stoppers_in_bid_suits)
 
-    def _can_bid_six_card_suit_at_three_level(self) -> bool:
+    def _can_bid_six_card_suit_at_three_level(self):
         """Return True if can bid 6 card suit at level 3."""
         return (self.shape[0] >= 6 and
                 self.hcp >= 10 and
                 self.next_level(self.longest_suit) <= 3 and
                 self.longest_suit not in self.opponents_suits)
 
-    def _has_ten_points_and_stoppers(self) -> bool:
+    def _has_ten_points_and_stoppers(self):
         """Return True if 10 points and can bid 3NT."""
         return (self.hcp >= 10 and
                 self.overcaller_bid_one.denomination.is_minor and
                 self.stoppers_in_bid_suits and
                 self.nt_level == 3)
 
-    def _has_eight_points_and_stoppers(self) -> bool:
+    def _has_eight_points_and_stoppers(self):
         """Return True if eight points and stoppers."""
         return (self.hcp >= 8 and
                 self.stoppers_in_unbid_suits() and
                 self.nt_level == 3)
 
-    def _has_eleven_points_balanced_and_responder_has_bid_game(self) -> bool:
+    def _has_eleven_points_balanced_and_responder_has_bid_game(self):
         """Return True if 11 points and responder at game."""
         return (self.hcp >= 11 and
                 self.shape[0] == 4 and
                 self.responder_bid_one.is_game)
 
-    def _is_weak_and_intervening_bid(self) -> bool:
+    def _is_weak_and_intervening_bid(self):
         """Return True if weak after overcaller has doubled."""
         double_index = self.bid_history.index('D')
         next_bid = Bid(self.bid_history[double_index+1])
@@ -978,25 +960,25 @@ class AdvancersBid(Hand):
                 self.hcp <= 5 and
                 self.shape[0] <= 5)
 
-    def _weak_and_responder_has_bid(self) -> bool:
+    def _weak_and_responder_has_bid(self):
         """Return True if weak and responder has bid."""
         return (self.hcp <= 5 and
                 not self.responder_bid_one.is_pass and
                 self.responder_bid_one.level <= 2)
 
-    def _has_ten_points_and_opening_bid_is_weak_three(self) -> bool:
+    def _has_ten_points_and_opening_bid_is_weak_three(self):
         """Return True if 10+ points and opener has bid at 3 level."""
         return (self.opener_bid_one.level == 3 and
                 self.nt_level <= 3 and
                 self.hcp >= 10)
 
-    def _has_thirteen_points_and_five_card_major(self) -> bool:
+    def _has_thirteen_points_and_five_card_major(self):
         """Return True if 13 points and five card major."""
         return (self.overcaller_bid_one.denomination.is_minor and
                 self.five_card_major_or_better and
                 self.hcp >= 13)
 
-    def _has_ten_points_overcaller_bid_minor(self) -> bool:
+    def _has_ten_points_overcaller_bid_minor(self):
         """Return True if 10 points and overcaller bid minor."""
         return (self.overcaller_bid_one.is_minor and
                 self.is_semi_balanced and
@@ -1004,10 +986,9 @@ class AdvancersBid(Hand):
                 self.hcp >= 10 and
                 not Bid(self.bid_history[-1]).is_value_call)
 
-    def _can_support_overcaller_at_given_level(self, level: int) -> bool:
+    def _can_support_overcaller_at_given_level(self, level):
         """Return True if can support overcaller at level 2."""
-        denomination = self.overcaller_bid_one.denomination
-        hand_value_points = self._get_hand_value_points(denomination)
+        hand_value_points = self._get_hand_value_points(self.overcaller_bid_one.denomination)
         if level == 2:
             points_range = range(8, 13)
         elif level == 3:
@@ -1017,9 +998,9 @@ class AdvancersBid(Hand):
         else:
             points_range = range(0, 0)
         return (hand_value_points in points_range and
-                self.next_level(denomination) <= level)
+                self.next_level(self.overcaller_bid_one.denomination) <= level)
 
-    def _opening_hand_and_overcaller_bid_minor(self) -> bool:
+    def _opening_hand_and_overcaller_bid_minor(self):
         """Return True if opening hand and overcaller bids minor."""
         return (self.hcp >= 13 and
                 self.is_semi_balanced and
@@ -1027,7 +1008,7 @@ class AdvancersBid(Hand):
                 self.stoppers_in_bid_suits and
                 self.nt_level <= 3)
 
-    def _ten_points_and_overcaller_bid_minor(self) -> bool:
+    def _ten_points_and_overcaller_bid_minor(self):
         """Return True if 10+ points and overcaller bids minor."""
         return (self.hcp >= 10 and
                 self.overcaller_bid_one.denomination.is_minor and
@@ -1035,24 +1016,23 @@ class AdvancersBid(Hand):
                 self.is_semi_balanced and
                 self.nt_level <= 2)
 
-    def _good_support_for_overcaller(self) -> bool:
+    def _good_support_for_overcaller(self):
         """Return True if good support for overcaller."""
-        denomination = self.overcaller_bid_one.denomination
-        hand_value_points = self._get_hand_value_points(denomination)
+        hand_value_points = self._get_hand_value_points(self.overcaller_bid_one.denomination)
         return (self.overcaller_bid_one.level <= 4 and
-                self.next_level(denomination) <= 4 and
+                self.next_level(self.overcaller_bid_one.denomination) <= 4 and
                 (self.hcp >= 16 or
                  (hand_value_points >= 14 and
                   self.overcallers_suit_holding >= 5)))
 
-    def _is_weak_with_some_support_for_overcaller(self) -> bool:
+    def _is_weak_with_some_support_for_overcaller(self):
         """Return True if weak with some support for overcaller."""
         return (self.overcallers_suit_holding >= 4 and
                 self.suit_points(self.overcaller_bid_one.denomination) >= 1 and
                 self.hcp >= 5 and
                 self.opener_bid_one.level == 2)
 
-    def _has_eleven_points_and_can_bid_nt(self) -> bool:
+    def _has_eleven_points_and_can_bid_nt(self):
         """Return True if 11 points and can bid nt."""
         return (self.stoppers_in_bid_suits and
                 self.hcp >= 11 and
@@ -1064,7 +1044,7 @@ class AdvancersBid(Hand):
                 self.shape[0] >= 5 and
                 self.longest_suit.is_major)
 
-    def _has_five_card_suit_and_seven_points(self) -> bool:
+    def _has_five_card_suit_and_seven_points(self):
         """Return True if 7 points and 5 card suit."""
         suit = self._select_suit()
         return (suit.is_suit and
@@ -1072,7 +1052,7 @@ class AdvancersBid(Hand):
                 self.hcp >= 7 and
                 not self.opener_bid_two.is_nt)
 
-    def _has_seven_card_suit_and_shortage_in_overcallers_suit(self) -> bool:
+    def _has_seven_card_suit_and_shortage_in_overcallers_suit(self):
         """Return True if 7 card suit and shortage in overcallers suit."""
         return (self.overcallers_suit_holding <= 1 and
                 self.shape[0] >= 7 and
@@ -1080,7 +1060,7 @@ class AdvancersBid(Hand):
                 self.next_level(self.longest_suit) <= 2 and
                 self.longest_suit not in self.opponents_suits)
 
-    def _strong_in_openers_suit(self) -> bool:
+    def _strong_in_openers_suit(self):
         """Return True if strong in openers suit."""
         return (self.opener_bid_one.is_suit_call and
                 ((self.hcp >= 8 and
@@ -1088,27 +1068,27 @@ class AdvancersBid(Hand):
                  (self.hcp >= 6 and
                   self.suit_length(self.opener_suit_one) >= 5)))
 
-    def _responder_has_passed_after_one_nt_opening(self) -> bool:
+    def _responder_has_passed_after_one_nt_opening(self):
         """Return True if 7 points and responder passes after 1NT."""
         return (self.opener_bid_one.is_nt and
                 self.hcp >= 7 and
                 self.responder_bid_one.is_pass)
 
-    def _suit_is_minor_and_can_bid_three_nt(self, suit, level: int) -> bool:
+    def _suit_is_minor_and_can_bid_three_nt(self, suit, level):
         """Return True if suit is minor and level over 3 NT."""
         return (10 <= self.hcp <= 12 and
                 level >= 4 and
                 suit.is_minor and
                 self.stoppers_in_bid_suits)
 
-    def _suit_is_minor_and_cannot_bid_three_nt(self, level: int) -> bool:
+    def _suit_is_minor_and_cannot_bid_three_nt(self, level):
         """Return True if suit is minor and level over 3 NT."""
         return (self.hcp >= 8 and
                 level >= 4 and
                 self.responder_bid_one.denomination.is_minor and
                 not self.overcaller_bid_one.is_double)
 
-    def _has_opening_hand_and_can_bid_to_game(self, suit: Suit) -> bool:
+    def _has_opening_hand_and_can_bid_to_game(self, suit):
         """Return True if opening hand and can bid to game in suit."""
         double_level = self.double_level()
         game_level = self.game_level(suit)
@@ -1117,13 +1097,13 @@ class AdvancersBid(Hand):
                 double_level == 3 and
                 next_level <= game_level)
 
-    def _overcaller_has_doubled_after_weak_two(self) -> bool:
+    def _overcaller_has_doubled_after_weak_two(self):
         """Return True if overcaller has doubled after weak two opening."""
         return (self.hcp >= 6 and
                 self.opener_bid_one.level == 2 and
                 self.longest_suit not in self.opponents_suits)
 
-    def _distributional_strong_hand(self, suit: Suit) -> bool:
+    def _distributional_strong_hand(self, suit):
         """Return True if distributional hand."""
         return (self.hcp + self.distribution_points >= 12 and
                 self.next_level(suit) <= 4 and
@@ -1136,37 +1116,32 @@ class AdvancersBid(Hand):
                 self.hcp >= 6 and
                 self.longest_suit not in self.opponents_suits)
 
-    def _is_balanced_and_holds_openers_suit(self) -> bool:
+    def _is_balanced_and_holds_openers_suit(self):
         """Return True if balanced and holds openers suit."""
         return (self.hcp >= 8 and
                 self.is_balanced and
                 self.stoppers_in_bid_suits)
 
-    def _has_unbid_five_four(self) -> bool:
+    def _has_unbid_five_four(self):
         """Return True if unbid 5/4 suits."""
         return (self.hcp >= 8 and
                 self.five_four and
                 (self.longest_suit not in self.opponents_suits or
                  self.second_suit not in self.opponents_suits))
 
-    def _cannot_bid_at_this_level(self) -> bool:
+    def _cannot_bid_at_this_level(self):
         """Return True if cannot make a sensible bid at this level."""
         level = self.next_level(self.longest_suit)
         jump = self.is_jump(self.opener_bid_one, self.overcaller_bid_one)
-        cannot_bid_at_level_three = (level >= 3
-                                     and self.hcp <= 11
-                                     and self.shape[0] <= 4
-                                     and not jump)
-        cannot_bid_at_level_two = (level >= 2
-                                   and self.hcp <= 9
-                                   and self.shape[0] <= 5
-                                   and not jump)
+        cannot_bid_at_level_three = (level >= 3 and self.hcp <= 11 and self.shape[0] <= 4 and
+                                     not jump)
+        cannot_bid_at_level_two = (level >= 2 and self.hcp <= 9 and self.shape[0] <= 5 and not jump)
         return (level >= 7 or
                 cannot_bid_at_level_three or
                 cannot_bid_at_level_two or
                 self.hcp < 6)
 
-    def _is_strong_with_good_six_card_major(self) -> bool:
+    def _is_strong_with_good_six_card_major(self):
         """Return True if strong with good six card major."""
         return (self.shape[0] >= 6 and
                 self.hcp >= 15 and
@@ -1174,7 +1149,7 @@ class AdvancersBid(Hand):
                 self.longest_suit.is_major and
                 self.longest_suit not in self.opponents_suits)
 
-    def _is_strong_with_good_seven_card_minor(self) -> bool:
+    def _is_strong_with_good_seven_card_minor(self):
         """Return True if strong with good 7 card minor."""
         return (self.shape[0] >= 7 and
                 self.hcp >= 15 and
@@ -1182,23 +1157,22 @@ class AdvancersBid(Hand):
                 self.longest_suit.is_minor and
                 self.longest_suit not in self.opponents_suits)
 
-    def _can_bid_own_suit_after_suit(self) -> bool:
+    def _can_bid_own_suit_after_suit(self):
         """Return True if can bid own suit."""
         return ((self.next_level(self.longest_suit) <= 2 or
                  self.hcp >= 10 or
                  self.longest_suit.is_major) and
-                (self.hcp >= 10
-                 or not self._fourth_suit_bid(self.longest_suit))
-                and self.longest_suit not in self.opponents_suits)
+                (self.hcp >= 10 or not self._fourth_suit_bid(self.longest_suit)) and
+                self.longest_suit not in self.opponents_suits)
 
-    def _has_six_points_and_can_bid_five_card_major(self) -> bool:
+    def _has_six_points_and_can_bid_five_card_major(self):
         """Return True if 6+ points and can bid 5 card major."""
         return (self.five_card_major_suit and
                 self.five_card_major_suit not in self.opponents_suits and
                 self.hcp >= 6 and
                 self.next_level(self.longest_suit) <= 4)
 
-    def _has_ten_points_and_can_bid_six_card_major(self) -> bool:
+    def _has_ten_points_and_can_bid_six_card_major(self):
         """Return True if 10+ points and can bid 6 card major."""
         return (self.shape[0] >= 6 and
                 self.longest_suit.is_major and
@@ -1206,7 +1180,7 @@ class AdvancersBid(Hand):
                 self.hcp >= 10 and
                 self.next_level(self.longest_suit) <= 4)
 
-    def _can_bid_stayman_after_overcallers_one_nt(self) -> bool:
+    def _can_bid_stayman_after_overcallers_one_nt(self):
         """Return True if 4 card major over overcallers 1NT."""
         return (self.overcaller_bid_one.name == '1NT' and
                 self.four_card_major_suit and
@@ -1214,13 +1188,13 @@ class AdvancersBid(Hand):
                 self.hcp >= 8 and
                 self.next_level(self.club_suit) <= 2)
 
-    def _can_bid_stayman_after_overcallers_two_nt(self) -> bool:
+    def _can_bid_stayman_after_overcallers_two_nt(self):
         """Return True if 4 card major over overcallers 2NT."""
         return (self.overcaller_bid_one.name == '2NT' and
                 self.four_card_major_suit and
                 self.hcp >= 6)
 
-    def _has_six_card_major_and_can_bid_game(self) -> bool:
+    def _has_six_card_major_and_can_bid_game(self):
         """Return True if six_card_major."""
         return (self.shape[0] >= 6 and
                 self.longest_suit.is_major and
@@ -1233,33 +1207,33 @@ class AdvancersBid(Hand):
                 self.hcp >= 9 and
                 self.longest_suit not in self.opponents_suits)
 
-    def _has_eight_points_and_five_card_major(self) -> bool:
+    def _has_eight_points_and_five_card_major(self):
         """Return True if 6 points and a five card major."""
         return (self.five_card_major_suit and
                 self.five_card_major_suit not in self.opponents_suits and
                 self.hcp >= 8)
 
-    def _is_five_four_or_five_five(self) -> bool:
+    def _is_five_four_or_five_five(self):
         """Return True if 5/4 or 5/5."""
         return ((self.five_four or self.five_five) and
                 (self.longest_suit not in self.opponents_suits or
                  self.second_suit not in self.opponents_suits))
 
-    def _can_bid_five_card_major_at_level_three(self) -> bool:
+    def _can_bid_five_card_major_at_level_three(self):
         """Return True if can bid 5 card major at level 3."""
         return (self.longest_suit.is_major and
                 self.longest_suit not in self.opponents_suits and
                 self.suit_length(self.longest_suit) >= 5 and
                 self.next_level(self.longest_suit) == 3)
 
-    def _is_balanced_after_overcallers_minor(self) -> bool:
+    def _is_balanced_after_overcallers_minor(self):
         """Return True if balanced and stoppers in bid suit."""
         return (self.hcp >= 11 and
                 self.is_balanced and
                 self.overcaller_bid_one.denomination.is_minor and
                 self.stoppers_in_bid_suits)
 
-    def _has_strength_and_support_to_overcall_three_level_bid(self) -> bool:
+    def _has_strength_and_support_for_overcallers_three_level_bid(self):
         """Return True if 10 points and supporter for overcaller."""
         return (self.overcaller_bid_one.level == 3 and
                 self.overcaller_bid_one.denomination.is_major and
@@ -1267,13 +1241,13 @@ class AdvancersBid(Hand):
                 self.overcallers_suit_holding >= 3 and
                 self.next_level(self.overcaller_bid_one.denomination) <= 4)
 
-    def _has_support_for_overcaller_and_better_points(self) -> bool:
+    def _has_support_for_overcaller_and_better_points(self):
         """Return True if support and better points in overcaller's suit."""
         return (self.overcallers_suit_holding >= 4 and
                 self.suit_points(self.overcaller_bid_one.denomination) >= 5 and
                 self.suit_points(self.longest_suit) <= 3)
 
-    def _overcaller_bid_nt_and_four_card_major(self) -> bool:
+    def _overcaller_bid_nt_and_four_card_major(self):
         """Return True if overcall has bid no trumps and a 4 card major."""
         return (self.hcp >= 8 and
                 self.longest_suit.is_major and

@@ -3,11 +3,14 @@
 """
 
 import inspect
-from .bidding import Pass
-from .blackwood import Blackwood
-from .hand import Hand
+from bfgbidding.bidding import Pass
+from bfgbidding.blackwood import Blackwood
+from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_openers_third_bid']
 
 
 class OpenersThirdBid(Hand):
@@ -20,7 +23,7 @@ class OpenersThirdBid(Hand):
         self.stayman_bid = (self.bid_one.is_nt and
                             self.responder_bid_one.denomination == self.club_suit and
                             self.last_bid.is_pass)
-        self.trace = 0
+        self.trace = trace(TRACER_CODE)
 
     def suggested_bid(self):
         """Directs control to relevant method and returns a Bid object."""

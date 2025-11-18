@@ -6,8 +6,11 @@ import inspect
 from bridgeobjects import Board, Card
 from bfgbidding.bidding import Bid, Pass, HandSuit
 from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_openers_bid']
 
 
 class OpeningBid(Hand):

@@ -1,5 +1,10 @@
 # Version History
 
+Version 0.1.3 - 18 November 2025
+
+1. Re engineered logging and trace
+------------------------------
+
 Version 0.1.2 - 05 November 2025
 
 1. Refactor advancers_rebid
@@ -148,6 +153,7 @@ Version 0.0.0 1 Feb 2023
 1. Initial load
 
 ------
+
 
 
 

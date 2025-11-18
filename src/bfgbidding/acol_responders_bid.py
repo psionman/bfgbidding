@@ -3,11 +3,15 @@
 """
 import inspect
 
-from .bidding import Bid, Pass, Double, HandSuit
-from .hand import Hand
 from bridgeobjects import Suit
 
+from bfgbidding.bidding import Bid, Pass, Double, HandSuit
+from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
+
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_responders_bid']
 
 
 class RespondersBid(Hand):
@@ -15,7 +19,7 @@ class RespondersBid(Hand):
 
     def __init__(self, hand_cards, board):
         super(RespondersBid, self).__init__(hand_cards, board)
-        self.trace = 0
+        self.trace = trace(TRACER_CODE)
 
     def suggested_bid(self):
         """Direct control to relevant method and return a Bid object."""

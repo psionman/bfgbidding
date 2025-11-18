@@ -4,18 +4,21 @@
 
 import inspect
 from bridgeobjects import Suit
-from .bidding import Bid, Pass, Double
-from .hand import Hand
-from .blackwood import Blackwood
+from bfgbidding.bidding import Bid, Pass, Double
+from bfgbidding.hand import Hand
+from bfgbidding.blackwood import Blackwood
+from bfgbidding.tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_openers_rebid']
 
 
 class OpenersReBid(Hand):
     """BfG OpenersReBid class."""
     def __init__(self, hand_cards, board):
         super(OpenersReBid, self).__init__(hand_cards, board)
-        self.trace = 0
+        self.trace = trace(TRACER_CODE)
 
     def suggested_bid(self) -> Bid:
         """Direct control to relevant method and return a Bid object."""

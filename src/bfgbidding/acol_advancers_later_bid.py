@@ -8,8 +8,11 @@ from bridgeobjects import Call, Board
 
 from bfgbidding.bidding import Bid, Pass
 from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_advancers_later_bid']
 
 
 class AdvancersLaterBid(Hand):
@@ -24,9 +27,10 @@ class AdvancersLaterBid(Hand):
             self.overcaller_bid_one = Bid(self.bid_history[-6], '')
             self.overcaller_bid_two = None
         self.advancer_bid_one = Bid(self.bid_history[-8], '')
-        self.trace = 0
 
-    def suggested_bid(self) -> Call:
+        self.trace = trace(TRACER_CODE)
+
+    def suggested_bid(self):
         """Direct control to relevant method and return a Bid object."""
         if self._overcaller_shows_two_suits_after_double():
             bid = self.advancer_preference('4801')

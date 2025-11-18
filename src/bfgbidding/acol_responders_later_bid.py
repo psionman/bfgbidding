@@ -2,11 +2,16 @@
     Acol RespondersLaterBid module
 """
 import inspect
-from .bidding import Bid, Pass
-from .blackwood import Blackwood
-from .hand import Hand
+
+from bfgbidding.bidding import Bid, Pass
+from bfgbidding.blackwood import Blackwood
+from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_responders_later_bid']
+
 
 class RespondersLaterBid(Hand):
     """BfG RespondersLaterBid class."""
@@ -17,7 +22,7 @@ class RespondersLaterBid(Hand):
         self.openers_first_bid = Bid(self.bid_history[-6])
         if len(self.bid_history) >= 10:
             self.openers_first_bid = Bid(self.bid_history[-10])
-        self.trace = 0
+        self.trace = trace(TRACER_CODE)
 
     def suggested_bid(self):
         """Direct control to relevant method and return a Bid object."""
@@ -344,7 +349,7 @@ class RespondersLaterBid(Hand):
         elif self.nt_level == 5:
             agreed_suit = Blackwood(self.cards, self.board).agreed_suit
             if not agreed_suit or agreed_suit.name == '':
-                print('Suit failure responderts later bid', self.board.__dict__)
+                print('Suit failure responders later bid', self.board.__dict__)
             if aces == 3:
                 bid = self.next_level_bid(agreed_suit, '3839')
             elif agreed_suit.name:

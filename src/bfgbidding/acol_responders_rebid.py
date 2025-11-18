@@ -3,12 +3,17 @@
 """
 
 import inspect
-from .bidding import Bid, Pass, HandSuit
-from .blackwood import Blackwood
-from .hand import Hand
+
 from bridgeobjects import Denomination, SUITS, Suit
 
+from bfgbidding.bidding import Bid, Pass, HandSuit
+from bfgbidding.blackwood import Blackwood
+from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
+
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_responders_rebid']
 
 
 class RespondersRebid(Hand):
@@ -25,7 +30,7 @@ class RespondersRebid(Hand):
                 break
         self.barrier_broken = self.barrier_is_broken(self.opener_bid_one,
                                                      self.opener_bid_two)
-        self.trace = 0
+        self.trace = trace(TRACER_CODE)
 
     def suggested_bid(self) -> Bid:
         """Direct control to relevant method and return a Bid object."""
@@ -1231,7 +1236,9 @@ class RespondersRebid(Hand):
         elif self._is_balanced_thirteen_points():
             bid = self.nt_bid(3, '3558')
         elif (self.hcp >= 11 and self.five_four_or_better and
-                self.second_suit not in self.opponents_suits):
+                self.second_suit not in self.opponents_suits
+                and not (self.opener_bid_two.is_game
+                         or self.responder_bid_one.is_game)):
             bid = self.next_level_bid(self.second_suit, '3559')
         elif self.hcp >= 11 and self.stoppers_in_bid_suits and self.nt_level <= 2:
             bid = self.next_nt_bid('3560')

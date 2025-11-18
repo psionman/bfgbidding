@@ -3,11 +3,14 @@
 """
 
 import inspect
-from .bidding import Bid, Pass
-from .blackwood import Blackwood
-from .hand import Hand
+from bfgbidding.bidding import Bid, Pass
+from bfgbidding.blackwood import Blackwood
+from bfgbidding.hand import Hand
+from bfgbidding.tracer import trace, TRACER_CODES
 
 inspection = inspect.currentframe
+
+TRACER_CODE = TRACER_CODES['acol_openers_later_bid']
 
 
 class OpenersLaterBid(Hand):
@@ -20,7 +23,7 @@ class OpenersLaterBid(Hand):
         self.my_penultimate_bid = Bid(self.bid_history[-8], '')
         self.partners_last_bid = Bid(self.bid_history[-2], '')
         self.partners_penultimate_bid = Bid(self.bid_history[-6], '')
-        self.trace = 0
+        self.trace = trace(TRACER_CODE)
 
     def suggested_bid(self):
         """Direct control to relevant method and returns a Bid object."""
