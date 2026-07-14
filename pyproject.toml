@@ -1,9 +1,9 @@
 [project]
 name = "bfgbidding"
-version = "0.1.4"
+version = "0.1.5"
 description = "Bidding module for BfG"
 authors = [
-    {name = "Jeff",email = "jeffwatkins2000@gmail.com"}
+    { name = "Jeff", email = "jeffwatkins2000@gmail.com" },
 ]
 readme = "README.md"
 requires-python = "==3.10.17"
@@ -18,8 +18,12 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ['pytest']
+dev = [
+    "pytest",
+]
 
 [build-system]
-requires = ['uv-build']
-build-backend = 'uv_build'
+requires = [
+    "uv-build",
+]
+build-backend = "uv_build"
