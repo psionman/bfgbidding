@@ -1,5 +1,8 @@
 # Version  history for bfgbidding
 
+## Version 0.1.8 - 26 July 2026
+1. Get rid of dotenv and use python-dotenv
+
 ## Version 0.1.7 - 26 July 2026
 1. Get rid of dotenv and use python-dotenv
 
@@ -112,6 +115,7 @@
 ## 0.0.0 - 1 Feb 2023
 
 1. Initial load
+
 
 
 
