@@ -7,7 +7,7 @@
 1. Get rid of dotenv and use python-dotenv
 
 ## Version 0.1.5 - 14 July 2026
-1. Defin logginf dir
+1. Define logging dir
 
 ## 0.1.4 - 18 November 2025
 
