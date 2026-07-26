@@ -1,6 +1,6 @@
 [project]
 name = "bfgbidding"
-version = "0.1.6"
+version = "0.1.7"
 description = "Bidding module for BfG"
 authors = [
     { name = "Jeff", email = "jeffwatkins2000@gmail.com" },
