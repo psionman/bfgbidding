@@ -1,5 +1,8 @@
 # Version  history for bfgbidding
 
+## Version 0.1.6 - 19 July 2026
+1. Get rid of dotenv and use python-dotenv
+
 ## Version 0.1.5 - 14 July 2026
 1. Defin logginf dir
 
@@ -106,4 +109,5 @@
 ## 0.0.0 - 1 Feb 2023
 
 1. Initial load
+
 
