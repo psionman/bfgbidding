@@ -1,4 +1,3 @@
 """Constants for bfgbidding."""
 
-
-APP_NAME = 'bfgbidding'
+APP_NAME = "bfgbidding"

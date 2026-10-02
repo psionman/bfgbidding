@@ -1,4 +1,12 @@
-"""Constants for bfgbidding."""
+"""Tracer for bfgbidding.
+
+To trace a specific module, set the TRACER environment variable to the module's tracer code.
+For example, to trace the acol_openers_bid module, set TRACER=2.
+or a multiple modules, set TRACER to the product of the tracer codes.
+For example, to trace the acol_openers_bid and acol_responders_bid modules, set TRACER=2*11=22.
+
+The trace is in the hand.py module tracer method
+"""
 
 import os
 
@@ -27,7 +35,11 @@ TRACER_CODES = {
 
 
 def get_trace(
-    hand, module: str, get_frame: object, trace_value: str = "", trace_message: str = ""
+    hand,
+    module: str,
+    get_frame: object,
+    trace_value: str = "",
+    trace_message: str = "",
 ) -> list:
 
     (source_file, display_file) = _get_source_and_display(hand, module)

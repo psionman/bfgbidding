@@ -87,7 +87,10 @@ def _console_handler(level=logging.INFO) -> logging.StreamHandler:
 def _file_handler(log_file: Path, level=logging.INFO) -> RotatingFileHandler:
     """Return the console handler for the logger."""
     file_handler = RotatingFileHandler(
-        str(log_file), maxBytes=MAX_BYTES, backupCount=BACKUP_COUNT, encoding="utf-8"
+        str(log_file),
+        maxBytes=MAX_BYTES,
+        backupCount=BACKUP_COUNT,
+        encoding="utf-8",
     )
     file_handler.setLevel(level)
     file_handler.setFormatter(

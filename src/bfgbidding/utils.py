@@ -1,8 +1,8 @@
 """Utility functions for bidding."""
 
 from bridgeobjects import ROLES
-from .bidding import Bid, Pass
 
+from .bidding import Bid, Pass
 
 NUMBER_OF_PLAYERS = 4
 
@@ -11,44 +11,45 @@ def get_role(bid_history: list[str]) -> int:
     """Return the role_id based on the length of the bid_history."""
     active_bid_history = get_active_bid_history(bid_history)
     if len(active_bid_history) % NUMBER_OF_PLAYERS == 0:
-        return ROLES['Opener']
+        return ROLES["Opener"]
 
     if len(active_bid_history) % NUMBER_OF_PLAYERS == 2:
-        return ROLES['Responder']
+        return ROLES["Responder"]
 
     all_passes = True
     for index, bid in enumerate(active_bid_history[1::2]):
-        if bid != 'P':
+        if bid != "P":
             all_passes = False
             break
 
     if all_passes:  # Must be overcaller
-        return ROLES['Overcaller']
+        return ROLES["Overcaller"]
 
     # Get number of calls after first overcall
     overcall_index = (index * 2) + 2
     remaining_calls = len(active_bid_history) - overcall_index + 1
 
     if remaining_calls % NUMBER_OF_PLAYERS == 0:
-        return ROLES['Overcaller']
-    return ROLES['Advancer']
+        return ROLES["Overcaller"]
+    return ROLES["Advancer"]
 
 
 def get_active_bid_history(bid_history) -> list[str]:
     """Return the bid history without leading PASSES."""
     for index, bid in enumerate(bid_history):
-        if bid != 'P':
+        if bid != "P":
             return bid_history[index:]
     return []
 
 
-class NamedBids():
+class NamedBids:
     """Specifically named bids."""
+
     def __init__(self, hand: object, bid_history: list[str]) -> None:
         self.hand = hand
         self.bid_history = bid_history
 
-        self.pass_bid = Pass('9999')
+        self.pass_bid = Pass("9999")
         self.opener_bid_one = self.pass_bid
         self.opener_bid_two = self.pass_bid
         self.opener_bid_three = self.pass_bid
@@ -93,10 +94,12 @@ class NamedBids():
         self.holding_partner_one = 0
         if self.hand:
             if self.overcaller_bid_one.is_suit_call:
-                self.overcaller_suit_one =  self.overcaller_bid_one.denomination
+                self.overcaller_suit_one = self.overcaller_bid_one.denomination
             if self.advancer_bid_one.is_suit_call:
                 self.advancer_suit_one = self.advancer_bid_one.denomination
-                self.holding_partner_one = self.hand.suit_length(self.advancer_suit_one)
+                self.holding_partner_one = self.hand.suit_length(
+                    self.advancer_suit_one
+                )
             if self.advancer_bid_two.is_suit_call:
                 self.advancer_suit_two = self.advancer_bid_two.denomination
 
@@ -119,24 +122,31 @@ class NamedBids():
 
     def _bid_after_stayman(self) -> bool:
         """Return True if responder has bid Clubs after NT opening."""
-        if (self.hand and self.opener_bid_one.is_nt and
-                self.responder_bid_one.denomination == self.hand.club_suit):
+        if (
+            self.hand
+            and self.opener_bid_one.is_nt
+            and self.responder_bid_one.denomination == self.hand.club_suit
+        ):
             return True
         return False
 
     def _overcaller_in_second_seat(self) -> bool:
         """Assign seat to overcaller."""
-        if (len(self.bid_history) >= 2 and
-                Bid(self.bid_history[1]).name != Pass().name):
+        if (
+            len(self.bid_history) >= 2
+            and Bid(self.bid_history[1]).name != Pass().name
+        ):
             return True
         return False
 
     def _overcaller_in_fourth_seat(self) -> bool:
         """Assign seat to overcaller."""
-        if (len(self.bid_history) >= 2 and
-                Bid(self.bid_history[1]).is_pass and
-                len(self.bid_history) >= 4 and
-                not Bid(self.bid_history[3]).is_pass):
+        if (
+            len(self.bid_history) >= 2
+            and Bid(self.bid_history[1]).is_pass
+            and len(self.bid_history) >= 4
+            and not Bid(self.bid_history[3]).is_pass
+        ):
             return True
         return False
 
@@ -204,8 +214,9 @@ class NamedBids():
         """Assign second bid."""
         # if self.bid_history[1] == 'P':
         self.overcaller_bid_one = Bid(self.bid_history[1])
-        self.overcaller_has_jumped = self.is_jump(self.opener_bid_one,
-                                                self.overcaller_bid_one)
+        self.overcaller_has_jumped = self.is_jump(
+            self.opener_bid_one, self.overcaller_bid_one
+        )
         self.right_hand_bid = Bid(self.bid_history[-1])
         self.partner_last_bid = Bid(self.bid_history[-2])
 
@@ -213,7 +224,9 @@ class NamedBids():
             self.partner_bid_one = Bid(self.bid_history[-2])
 
         if self.hand and self.partner_bid_one.is_suit_call:
-            self.holding_partner_one = self.hand.suit_holding[self.partner_bid_one.denomination]
+            self.holding_partner_one = self.hand.suit_holding[
+                self.partner_bid_one.denomination
+            ]
 
         if len(self.bid_history) >= 7:
             self.partner_penultimate_bid = Bid(self.bid_history[-6])
@@ -221,8 +234,10 @@ class NamedBids():
     def _assign_third_bid(self) -> None:
         """Assign third bid."""
         self.responder_bid_one = Bid(self.bid_history[2])
-        self.responders_support = (self.opener_bid_one.denomination ==
-                                   self.responder_bid_one.denomination)
+        self.responders_support = (
+            self.opener_bid_one.denomination
+            == self.responder_bid_one.denomination
+        )
 
     def _assign_fourth_bid(self) -> None:
         """Assign fourth bid."""
@@ -231,8 +246,9 @@ class NamedBids():
         self.previous_bid = Bid(self.bid_history[-4])
         if self.overcaller_in_fourth_seat:
             self.overcaller_bid_one = Bid(self.bid_history[3])
-            self.overcaller_has_jumped = self.is_jump(self.responder_bid_one,
-                                                      self.overcaller_bid_one)
+            self.overcaller_has_jumped = self.is_jump(
+                self.responder_bid_one, self.overcaller_bid_one
+            )
         self.my_last_bid = Bid(self.bid_history[-4])
 
     def _assign_fifth_bid(self) -> None:
@@ -265,7 +281,7 @@ class NamedBids():
 
     def _assign_ninth_bid(self) -> None:
         """Assign ninth bid."""
-        self.opener_bid_three = Bid(self.bid_history[8], '')
+        self.opener_bid_three = Bid(self.bid_history[8], "")
 
     def _assign_tenth_bid(self) -> None:
         """Assign tenth bid."""

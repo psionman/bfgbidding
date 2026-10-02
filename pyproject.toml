@@ -1,6 +1,6 @@
 [project]
 name = "bfgbidding"
-version = "0.1.8"
+version = "0.1.9"
 description = "Bidding module for BfG"
 authors = [
     { name = "Jeff", email = "jeffwatkins2000@gmail.com" },
@@ -27,3 +27,18 @@ requires = [
     "uv-build",
 ]
 build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "N",
+    "W",
+    "B",
+    "UP",
+]

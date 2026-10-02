@@ -1,41 +1,45 @@
-""" Bid for Game
-    Bridge objects
+"""Bid for Game
+Bridge objects
 """
 
-from bridgeobjects import Card, SUITS, Hand, Suit
-from bridgeobjects import Call
-from .comments import comment_id, comment_html, strategy_html
+from bridgeobjects import SUITS, Call, Card, Hand, Suit
+
+from .comments import comment_html, comment_id, strategy_html
+
 # from .strategy_xref import StrategyXref
 
 
 class Bid(Call):
     """Return BfG Bid class."""
-    def __init__(self, name: str = '',
-                 call_id: str = '0000',
-                 use_shortage_points:
-                 bool = False,
-                 *args,
-                 **kwargs) -> None:
+
+    def __init__(
+        self,
+        name: str = "",
+        call_id: str = "0000",
+        use_shortage_points: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(name, *args, **kwargs)
         self.use_shortage_points: bool = use_shortage_points
-        self.rtf_comment: str = ''
-        self.rtf_strategy: str = ''
+        self.rtf_comment: str = ""
+        self.rtf_strategy: str = ""
         # if call_id not in CommentXref.comments:
         #     call_id = '0000'
         self.call_id: str = call_id
 
         # the comments dict contains a gettext reference to the
         # comment/strategy text.
-        self.comment_id: str = ''
-        self.strategy_id: str = ''
-        self.comment_html: str = ''
-        self.strategy_html: str = ''
-        self.comment_rst: str = ''
-        self.strategy_rst: str = ''
+        self.comment_id: str = ""
+        self.strategy_id: str = ""
+        self.comment_html: str = ""
+        self.strategy_html: str = ""
+        self.comment_rst: str = ""
+        self.strategy_rst: str = ""
 
     def __repr__(self) -> str:
         """Return a __repr__ display value of object."""
-        return f'bid: {self._name}, {self.call_id}'
+        return f"bid: {self._name}, {self.call_id}"
 
     def get_comments(self) -> None:
         """Get the bid comments from the x_refs."""
@@ -49,46 +53,58 @@ class Bid(Call):
     @staticmethod
     def _convert_html_to_rst(html: str) -> str:
         """Return and html_string as rst."""
-        rst = html.replace('<br>', '\n')
-        rst = rst.replace('<p> ', '<p>')
-        rst = rst.replace('<p>', '\n\n')
-        rst = rst.replace('<span style="color:red">', '**')
-        rst = rst.replace('<span style="color:green">', '**')
-        rst = rst.replace('</span>', '**')
+        rst = html.replace("<br>", "\n")
+        rst = rst.replace("<p> ", "<p>")
+        rst = rst.replace("<p>", "\n\n")
+        rst = rst.replace('<span style="color:red">', "**")
+        rst = rst.replace('<span style="color:green">', "**")
+        rst = rst.replace("</span>", "**")
         return rst
 
 
 class Pass(Bid):
     """Class definition for PASS bid."""
+
     def __init__(
-            self, call_id: str = '0000',
-            use_shortage_points: bool = False,
-            *args, **kwargs):
-        super(Pass, self).__init__(
-            name='P',
+        self,
+        call_id: str = "0000",
+        use_shortage_points: bool = False,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            name="P",
             call_id=call_id,
             use_shortage_points=use_shortage_points,
-            *args, **kwargs)
+            *args,
+            **kwargs,
+        )
         pass
 
 
 class Double(Bid):
     """Class definition for DOUBLE bid."""
+
     def __init__(
-            self,
-            call_id: str = '0000',
-            use_shortage_points: bool = False,
-            *args, **kwargs):
-        super(Double, self).__init__(
-            name='D',
+        self,
+        call_id: str = "0000",
+        use_shortage_points: bool = False,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            name="D",
             call_id=call_id,
             use_shortage_points=use_shortage_points,
-            *args, **kwargs)
+            *args,
+            **kwargs,
+        )
         pass
 
 
-class HandSuit(object):
+class HandSuit:
     """Instantiate BfG HandSuit class."""
+
     # SUITS = {
     #     'NT': -1,
     #     'S': 0,
@@ -102,9 +118,12 @@ class HandSuit(object):
     #     3: 'C'
     # }
 
-    def __init__(self, suit: Suit | None = None,
-                 hand: Hand | None = None,
-                 bid_history: list[str] = None):
+    def __init__(
+        self,
+        suit: Suit | None = None,
+        hand: Hand | None = None,
+        bid_history: list[str] = None,
+    ):
         """Initialise class."""
         self.suit = suit
         self.name = suit.name
@@ -112,8 +131,9 @@ class HandSuit(object):
         self._card_list = []
         if hand:
             self.cards = hand.cards
-            self._card_list = [card for card in hand.cards
-                               if card.suit == suit]
+            self._card_list = [
+                card for card in hand.cards if card.suit == suit
+            ]
         if not bid_history:
             bid_history = []
         self.bid_history = bid_history
@@ -134,39 +154,42 @@ class HandSuit(object):
 
     def __repr__(self) -> str:
         """Return a __repr__ display value of object."""
-        return 'HandSuit: %s' % self.name
+        return "HandSuit: %s" % self.name
 
     def suit_quality(self) -> int:
         """Return the suit quality."""
         quality = 0
-        if Card('A', self.suit.name) in self._card_list:
+        if Card("A", self.suit.name) in self._card_list:
             quality += 1
-        if Card('K', self.suit.name) in self._card_list:
+        if Card("K", self.suit.name) in self._card_list:
             quality += 1
-        if Card('Q', self.suit.name) in self._card_list:
+        if Card("Q", self.suit.name) in self._card_list:
             quality += 0.5
-        if Card('J', self.suit.name) in self._card_list:
+        if Card("J", self.suit.name) in self._card_list:
             quality += 0.5
         return quality
 
     def has_control(self, hand: Hand) -> bool:
         """Return True if hand has control of that suit."""
         suit = self.suit
-        if Card('A', suit.name) in self.cards:
+        if Card("A", suit.name) in self.cards:
             return True
-        elif (Card('K', suit.name) in self.cards and
-              hand.suit_holding[suit] >= 2):
+        elif (
+            Card("K", suit.name) in self.cards and hand.suit_holding[suit] >= 2
+        ):
             return True
-        elif (Card('Q', suit.name) in self.cards and
-              hand.suit_holding[suit] > 3):
+        elif (
+            Card("Q", suit.name) in self.cards and hand.suit_holding[suit] > 3
+        ):
             return True
-        elif (Card('J', suit.name) in self.cards and
-              hand.suit_holding[suit] >= 4):
+        elif (
+            Card("J", suit.name) in self.cards and hand.suit_holding[suit] >= 4
+        ):
             return True
         return False
 
     def _touching_honours(self) -> int:
-        touching_pairs = ['AK', 'KQ', 'QJ', 'JT']
+        touching_pairs = ["AK", "KQ", "QJ", "JT"]
         touching_honours = 1
         touching_honours_hold = 1
         for index, card in enumerate(self._card_list[1:]):
@@ -192,9 +215,9 @@ class HandSuit(object):
     def _ace_as_single_honour(self) -> bool:
         result = False
         for card in self._card_list:
-            if card.name == 'A':
+            if card.name == "A":
                 result = True
-            elif card.name in ['TJQK']:
+            elif card.name in ["TJQK"]:
                 result = False
                 break
         return result
@@ -226,7 +249,7 @@ class HandSuit(object):
             if contract_suit == self._suit_from_bid(bid):
                 offset = index % 2
 
-        for bid in bid_history[offset*2+1::4]:
+        for bid in bid_history[offset * 2 + 1 :: 4]:
             suit = self._suit_from_bid(bid)
             if suit == self.suit:
                 partners_bid = True

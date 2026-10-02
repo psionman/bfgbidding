@@ -1,22 +1,33 @@
-""" Bid for Game Hand module."""
+"""Bid for Game Hand module."""
 
 import contextlib
+import inspect
+import json
 import os
 from pathlib import Path
-import json
-import inspect
 
-from bridgeobjects import (Board, Hand, Card, Call, Suit, NoTrumps,
-                           SUIT_NAMES, CALLS, SUITS, Denomination)
+from bridgeobjects import (
+    CALLS,
+    SUIT_NAMES,
+    SUITS,
+    Board,
+    Call,
+    Card,
+    Denomination,
+    Hand,
+    NoTrumps,
+    Suit,
+)
+
 from bfgbidding.bidding import Bid
-from bfgbidding.utils import NamedBids
-from bfgbidding.tracer import get_trace
 from bfgbidding.logger import app_logger
+from bfgbidding.tracer import get_trace
+from bfgbidding.utils import NamedBids
 
 logger = app_logger()
 
-MODULE_TRACE = 'batch_tests/data//module_trace.txt'
-TRACE_FILE = 'trace.txt'
+MODULE_TRACE = "batch_tests/data//module_trace.txt"
+TRACE_FILE = "trace.txt"
 TRACE_PATH = Path(os.getcwd(), TRACE_FILE)
 trace_set = False
 trace_value = False
@@ -24,24 +35,27 @@ trace_value = False
 
 class Hand(Hand):
     """A sub class of bridgeobjects Hand, to enable bidding."""
-    overcaller_position = {'none': 0, 'second_seat': 1, 'fourth_seat': 2}
 
-    spade_suit = SUITS['S']
-    heart_suit = SUITS['H']
-    diamond_suit = SUITS['D']
-    club_suit = SUITS['C']
+    overcaller_position = {"none": 0, "second_seat": 1, "fourth_seat": 2}
+
+    spade_suit = SUITS["S"]
+    heart_suit = SUITS["H"]
+    diamond_suit = SUITS["D"]
+    club_suit = SUITS["C"]
 
     def __init__(
-            self,
-            hand_cards: list[Card] = None,
-            board: Board = None,
-            display_trace: bool = False,
-            display_hand: bool = False,
-            *args, **kwargs) -> None:
+        self,
+        hand_cards: list[Card] = None,
+        board: Board = None,
+        display_trace: bool = False,
+        display_hand: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(hand_cards, *args, **kwargs)
         (self.board, bid_history, self.overcaller) = self._setup_board(board)
         self.bid_history = bid_history
-        self.suits = [SUITS[name] for name in 'CDHS']
+        self.suits = [SUITS[name] for name in "CDHS"]
         self.no_trumps = NoTrumps()
         self._losers = None
         self.display_trace = display_trace
@@ -106,17 +120,18 @@ class Hand(Hand):
         """Return object as json string property."""
         return json.dumps(
             {
-                'cards': [card.name for card in self.cards],
-                'unplayed_cards': [card.name for card in self.unplayed_cards],
+                "cards": [card.name for card in self.cards],
+                "unplayed_cards": [card.name for card in self.unplayed_cards],
             }
         )
 
     def from_json(self, json_str: str) -> None:
         """Populate the attributes from the json string."""
         hand_dict = json.loads(json_str)
-        self.cards = [Card(name) for name in hand_dict['cards']]
-        self.unplayed_cards = [Card(name)
-                               for name in hand_dict['unplayed_cards']]
+        self.cards = [Card(name) for name in hand_dict["cards"]]
+        self.unplayed_cards = [
+            Card(name) for name in hand_dict["unplayed_cards"]
+        ]
 
     @property
     def nt_level(self) -> int:
@@ -168,7 +183,7 @@ class Hand(Hand):
                 suit = Suit(suit_name)
                 if self.suit_length(suit) == 1:
                     for card in self.cards:
-                        if card.suit == suit and card.rank in 'KQ':
+                        if card.suit == suit and card.rank in "KQ":
                             return True
         return False
 
@@ -216,8 +231,10 @@ class Hand(Hand):
             if Bid(self.bid_history[-1]).is_double:
                 return True
             elif len(self.bid_history) >= 3:
-                if (Bid(self.bid_history[-3]).is_double and
-                        Bid(self.bid_history[-1]).is_pass):
+                if (
+                    Bid(self.bid_history[-3]).is_double
+                    and Bid(self.bid_history[-1]).is_pass
+                ):
                     return True
         return False
 
@@ -228,73 +245,89 @@ class Hand(Hand):
 
     def _partner_has_passed(self) -> bool:
         """Return True of partner passed on first round."""
-        return (bool(len(self.bid_history) >= 5
-                     and Bid(self.bid_history[-5]).is_pass))
+        return bool(
+            len(self.bid_history) >= 5 and Bid(self.bid_history[-5]).is_pass
+        )
 
     def _bid_after_stayman(self) -> bool:
         """Return True if responder has bid Clubs after NT opening."""
         return bool(
-            (
-                self.opener_bid_one.is_nt
-                and self.responder_bid_one.denomination == self.club_suit
-            )
+            self.opener_bid_one.is_nt
+            and self.responder_bid_one.denomination == self.club_suit
         )
 
-# TODO: sort out use of shortage points
-    def suit_bid(self, level: int,
-                 suit: Suit,
-                 comment: str = '0000',
-                 use_shortage_points: bool = False) -> Bid:
+    # TODO: sort out use of shortage points
+    def suit_bid(
+        self,
+        level: int,
+        suit: Suit,
+        comment: str = "0000",
+        use_shortage_points: bool = False,
+    ) -> Bid:
         """Return a bid in the suit at the given level."""
         return Bid(
-            self._call_name(level, suit.name), comment, use_shortage_points)
+            self._call_name(level, suit.name), comment, use_shortage_points
+        )
 
-    def heart_bid(self,
-                  level: int,
-                  comment: str = '0000',
-                  use_shortage_points: bool = False) -> Bid:
+    def heart_bid(
+        self,
+        level: int,
+        comment: str = "0000",
+        use_shortage_points: bool = False,
+    ) -> Bid:
         """Return a bid in Hearts at the given level."""
-        return Bid(self._call_name(level, 'H'), comment, use_shortage_points)
+        return Bid(self._call_name(level, "H"), comment, use_shortage_points)
 
-    def spade_bid(self,
-                  level: int,
-                  comment: str = '0000',
-                  use_shortage_points: bool = False) -> Bid:
+    def spade_bid(
+        self,
+        level: int,
+        comment: str = "0000",
+        use_shortage_points: bool = False,
+    ) -> Bid:
         """Return a bid in Spades at the given level."""
-        return Bid(self._call_name(level, 'S'), comment, use_shortage_points)
+        return Bid(self._call_name(level, "S"), comment, use_shortage_points)
 
-    def club_bid(self,
-                 level: int,
-                 comment: str = '0000',
-                 use_shortage_points: bool = False) -> Bid:
+    def club_bid(
+        self,
+        level: int,
+        comment: str = "0000",
+        use_shortage_points: bool = False,
+    ) -> Bid:
         """Return a bid in Clubs at the given level."""
-        return Bid(self._call_name(level, 'C'), comment, use_shortage_points)
+        return Bid(self._call_name(level, "C"), comment, use_shortage_points)
 
-    def diamond_bid(self,
-                    level: int,
-                    comment: str = '0000',
-                    use_shortage_points: bool = False) -> Bid:
+    def diamond_bid(
+        self,
+        level: int,
+        comment: str = "0000",
+        use_shortage_points: bool = False,
+    ) -> Bid:
         """Return a bid in Diamonds at the given level."""
-        return Bid(self._call_name(level, 'D'), comment, use_shortage_points)
+        return Bid(self._call_name(level, "D"), comment, use_shortage_points)
 
-    def nt_bid(self,
-               level: int,
-               comment: str = '0000',
-               use_shortage_points: bool = False) -> Bid:
+    def nt_bid(
+        self,
+        level: int,
+        comment: str = "0000",
+        use_shortage_points: bool = False,
+    ) -> Bid:
         """Return a bid in NT at the given level."""
-        return Bid(self._call_name(level, 'NT'), comment, use_shortage_points)
+        return Bid(self._call_name(level, "NT"), comment, use_shortage_points)
 
     def barrier_is_broken(self, first_bid: Bid, second_bid: Bid) -> bool:
         """Return True if second_bid breaks the barrier relative to bid_one."""
         level_one = first_bid.level
         barrier = Bid(
-            self._call_name(level_one+1, first_bid.denomination.name))
+            self._call_name(level_one + 1, first_bid.denomination.name)
+        )
         return self._higher_bid(barrier, second_bid)
 
     def cheapest_long_suit(self) -> Suit | None:
         """Return the longest suit or cheapest of equal length suits to bid."""
-        if (self.shape[0] > self.shape[1]
-                and self.longest_suit not in self.opponents_suits):
+        if (
+            self.shape[0] > self.shape[1]
+            and self.longest_suit not in self.opponents_suits
+        ):
             return self.longest_suit
 
         max_length = self.shape[1]
@@ -311,9 +344,11 @@ class Hand(Hand):
             level = nt_level + 1 if index >= 4 else nt_level
             # test the next suit
             suit = extended_suit_list[index]
-            if (self.suit_length(suit) == max_length and
-                    self.next_level(suit) == level and
-                    suit not in self.opponents_suits):
+            if (
+                self.suit_length(suit) == max_length
+                and self.next_level(suit) == level
+                and suit not in self.opponents_suits
+            ):
                 return suit
         return None
 
@@ -323,12 +358,12 @@ class Hand(Hand):
             call = Bid(bid)
             if call.is_suit_call:
                 return call.denomination
-        assert False, 'Last denomination called with no value call in history'
+        assert False, "Last denomination called with no value call in history"
 
     @staticmethod
     def _get_extended_suit_list() -> list[str]:
         """Return an extended list of sorted of suits,
-            e.g. [C, D, H, S, C, D, H, S]."""
+        e.g. [C, D, H, S, C, D, H, S]."""
         extended_suit_list = [Suit(name) for name in SUIT_NAMES]
         extended_suit_list.sort(key=lambda x: x.rank)
 
@@ -367,20 +402,21 @@ class Hand(Hand):
 
     def jump_bid_made(self, test_bid: Bid) -> bool:
         """Test bid against bid-history and return True
-                    if test_bid is a jump over last relevant bid."""
+        if test_bid is a jump over last relevant bid."""
         second_bid = next(
             (
                 Bid(bid)
                 for bid in self.bid_history[::-1]
-                if bid not in ['P', 'D', 'R']
+                if bid not in ["P", "D", "R"]
             ),
             None,
         )
         jump_level = test_bid.level - second_bid.level
         if jump_level > 1:
             return True
-        elif (jump_level == 1
-                and second_bid.denomination < test_bid.denomination):
+        elif (
+            jump_level == 1 and second_bid.denomination < test_bid.denomination
+        ):
             return True
         return False
 
@@ -395,7 +431,7 @@ class Hand(Hand):
         """
         steps = 0
         while bid_one < bid_two:
-            bid_one = self.suit_bid(bid_one.level+1, bid_one.denomination)
+            bid_one = self.suit_bid(bid_one.level + 1, bid_one.denomination)
             steps += 1
         return steps
 
@@ -414,15 +450,17 @@ class Hand(Hand):
         return next(
             (
                 (
-                    self.overcaller_position['fourth_seat']
-                    if (Bid(bid_history[-1]).is_value_call
-                        and len(bid_history) > 2)
-                    else self.overcaller_position['second_seat']
+                    self.overcaller_position["fourth_seat"]
+                    if (
+                        Bid(bid_history[-1]).is_value_call
+                        and len(bid_history) > 2
+                    )
+                    else self.overcaller_position["second_seat"]
                 )
                 for bid in bid_history[1::2]
                 if not Bid(bid).is_pass
             ),
-            self.overcaller_position['none'],
+            self.overcaller_position["none"],
         )
 
     @property
@@ -433,8 +471,10 @@ class Hand(Hand):
     def _opponents_at_game(self):
         """Return True if opponents at game level."""
         if len(self.bid_history) >= 3:
-            if (Bid(self.bid_history[-3]).is_game or
-                    Bid(self.bid_history[-1]).is_game):
+            if (
+                Bid(self.bid_history[-3]).is_game
+                or Bid(self.bid_history[-1]).is_game
+            ):
                 return True
         elif len(self.bid_history) >= 1:
             if Bid(self.bid_history[-1]).is_game:
@@ -456,7 +496,7 @@ class Hand(Hand):
         return self._can_double()
 
     def _can_double(self) -> bool:
-        return self.bid_history[-1] != 'P'
+        return self.bid_history[-1] != "P"
 
     @property
     def partner_doubled_game(self) -> bool:
@@ -465,8 +505,8 @@ class Hand(Hand):
 
     def _partner_doubled_game(self) -> bool:
         """Return True if partner has doubled at or above game level."""
-        if 'D' in self.bid_history:
-            index = self.bid_history.index('D')
+        if "D" in self.bid_history:
+            index = self.bid_history.index("D")
             bids = [Bid(bid) for bid in self.bid_history[index::-1]]
             for bid in bids:
                 if bid.is_value_call:
@@ -475,7 +515,7 @@ class Hand(Hand):
 
     def double_level(self) -> int:
         """Return the level at which the DOUBLE was made."""
-        index = self.bid_history.index('D')
+        index = self.bid_history.index("D")
         bids = [Bid(bid) for bid in self.bid_history[index::-1]]
         return next((bid.level for bid in bids if bid.is_value_call), 0)
 
@@ -505,8 +545,8 @@ class Hand(Hand):
             None,
         )
         value = False
-        partners_bid = Bid(self.bid_history[double_index+2])
-        for bid in list(reversed(self.bid_history))[double_index+1::2]:
+        partners_bid = Bid(self.bid_history[double_index + 2])
+        for bid in list(reversed(self.bid_history))[double_index + 1 :: 2]:
             if Bid(bid).is_value_call:
                 # noinspection PyTypeChecker
                 value = self.is_jump(Bid(bid), partners_bid)
@@ -516,11 +556,12 @@ class Hand(Hand):
         """Return a suit agreed by opener."""
         suit = None
         if len(self.bid_history) >= 5:
-            opps_bid_one = Bid(self.bid_history[0], '')
-            opps_bid_two = Bid(self.bid_history[2], '')
-            opps_bid_three = Bid(self.bid_history[4], '')
-            if ((opps_bid_two.denomination == opps_bid_three.denomination) or
-                    (opps_bid_one.denomination == opps_bid_two.denomination)):
+            opps_bid_one = Bid(self.bid_history[0], "")
+            opps_bid_two = Bid(self.bid_history[2], "")
+            opps_bid_three = Bid(self.bid_history[4], "")
+            if (opps_bid_two.denomination == opps_bid_three.denomination) or (
+                opps_bid_one.denomination == opps_bid_two.denomination
+            ):
                 suit = opps_bid_two.denomination
             if opps_bid_one.is_double and opps_bid_two.is_suit_call:
                 suit = opps_bid_two.denomination
@@ -533,8 +574,11 @@ class Hand(Hand):
 
     def next_four_card_suit(self) -> Suit:
         """Return the cheapest four card suit."""
-        suits = [suit for suit in self.suits_by_length
-                 if self.suit_length(suit) == 4]
+        suits = [
+            suit
+            for suit in self.suits_by_length
+            if self.suit_length(suit) == 4
+        ]
         return self.cheapest_suit(suits)
 
     def cheapest_suit(self, suits: list[Suit]) -> Suit:
@@ -573,44 +617,50 @@ class Hand(Hand):
         else:
             return 3
 
-    def bid_to_game(self,
-                    denomination: Denomination,
-                    comment: str = '0000',
-                    use_distribution_points: bool = False) -> Bid | None:
+    def bid_to_game(
+        self,
+        denomination: Denomination,
+        comment: str = "0000",
+        use_distribution_points: bool = False,
+    ) -> Bid | None:
         """Return game level bid in given denomination"""
         if denomination.is_nt:
-            return Bid('3NT', comment, use_distribution_points)
+            return Bid("3NT", comment, use_distribution_points)
         elif denomination.is_major:
             return Bid(
-                    self._call_name(4,  denomination.name),
-                    comment, use_distribution_points)
+                self._call_name(4, denomination.name),
+                comment,
+                use_distribution_points,
+            )
         elif denomination.is_minor:
             return Bid(
-                self._call_name(5,  denomination.name),
-                comment, use_distribution_points)
+                self._call_name(5, denomination.name),
+                comment,
+                use_distribution_points,
+            )
         return None
 
     @property
     def stoppers_in_bid_suits(self) -> bool:
         """Return True if hand contains stoppers
-            in all opponent's bid suits."""
+        in all opponent's bid suits."""
         return self._stoppers_in_bid_suits()
 
     @property
     def poor_stoppers_in_bid_suits(self) -> bool:
         """Return True if hand contains stoppers (including ten)
-            in all opponent's bid suits."""
-        return self._stoppers_in_bid_suits(lowest_card='T')
+        in all opponent's bid suits."""
+        return self._stoppers_in_bid_suits(lowest_card="T")
 
-    def _stoppers_in_bid_suits(self, lowest_card='J'):
+    def _stoppers_in_bid_suits(self, lowest_card="J"):
         """Return True if hand contains stoppers
-            in all opponent's bid suits."""
+        in all opponent's bid suits."""
         return all(
             self.suit_stopper(suit, lowest_card)
             for suit in self.opponents_suits
         )
 
-    def suit_stopper(self, suit: Suit, lowest_card: str = 'J') -> bool:
+    def suit_stopper(self, suit: Suit, lowest_card: str = "J") -> bool:
         """Return True if the hand contains a stopper in 'suit'."""
         if not suit:
             return False
@@ -622,16 +672,20 @@ class Hand(Hand):
             return True
 
         poor_stopper = False
-        ace_stopper = Card('A', suit.name) in self.cards
-        king_stopper = (Card('K', suit.name) in self.cards
-                        and suit_holding[suit] >= 2)
-        queen_stopper = (Card('Q', suit.name) in self.cards
-                         and suit_holding[suit] >= 3)
-        jack_stopper = (Card('J', suit.name) in self.cards
-                        and suit_holding[suit] >= 4)
-        if lowest_card == 'T':
-            poor_stopper = (Card('T', suit.name) in self.cards
-                            and suit_holding[suit] >= 4)
+        ace_stopper = Card("A", suit.name) in self.cards
+        king_stopper = (
+            Card("K", suit.name) in self.cards and suit_holding[suit] >= 2
+        )
+        queen_stopper = (
+            Card("Q", suit.name) in self.cards and suit_holding[suit] >= 3
+        )
+        jack_stopper = (
+            Card("J", suit.name) in self.cards and suit_holding[suit] >= 4
+        )
+        if lowest_card == "T":
+            poor_stopper = (
+                Card("T", suit.name) in self.cards and suit_holding[suit] >= 4
+            )
         return (
             ace_stopper
             or king_stopper
@@ -656,7 +710,7 @@ class Hand(Hand):
 
     def stoppers_in_unbid_suits(self) -> bool:
         """Return True if hand contains stoppers in all
-            opponent's unbid suits."""
+        opponent's unbid suits."""
         bid_suits = []
         for bid in self.bid_history:
             bid_suit = Bid(bid).denomination
@@ -674,9 +728,9 @@ class Hand(Hand):
             for test_suit in self.suits
         )
 
-    def four_in_bid_suits(self, lowest_card='J') -> bool:
+    def four_in_bid_suits(self, lowest_card="J") -> bool:
         """Return True if hand contains stoppers or 4 cards in all
-            opponent's bid suits.
+        opponent's bid suits.
         """
         return not any(
             (
@@ -688,7 +742,7 @@ class Hand(Hand):
 
     def three_suits_bid_and_stopper(self) -> bool:
         """Returns True if three suits bid and
-                hand has an stopper in the unbid suit"""
+        hand has an stopper in the unbid suit"""
         suits_bid = [False, False, False, False]
         for bid_name in self.bid_history[::2]:
             bid = Bid(bid_name)
@@ -701,8 +755,10 @@ class Hand(Hand):
                     suit = self.suits[index]
                     if self.suit_stopper(suit):
                         return True
-                    if (self.suit_points(suit) >= 1
-                            and self.suit_holding[suit] >= 3):
+                    if (
+                        self.suit_points(suit) >= 1
+                        and self.suit_holding[suit] >= 3
+                    ):
                         return True
         return False
 
@@ -719,7 +775,7 @@ class Hand(Hand):
 
     def next_level(self, suit: Suit, raise_level: int = 0) -> bool:
         """Return the next next level for a suit bid."""
-        level = self.next_level_bid(suit, '000', raise_level).level
+        level = self.next_level_bid(suit, "000", raise_level).level
         return level
 
     def current_bid_level(self) -> int:
@@ -727,10 +783,9 @@ class Hand(Hand):
         bid = self._get_last_bid()
         return bid.level
 
-    def next_level_bid(self,
-                       suit: Suit,
-                       comment: str = '0000',
-                       raise_level: int = 0) -> int:
+    def next_level_bid(
+        self, suit: Suit, comment: str = "0000", raise_level: int = 0
+    ) -> int:
         """Return the lowest possible bid in suit."""
         last_bid = self._get_last_bid()
         level = self._get_Level_of_last_bid(last_bid)
@@ -754,14 +809,14 @@ class Hand(Hand):
         """Return last quantitative bid from history."""
         return next(
             (
-                Bid(bid_level, '0000')
+                Bid(bid_level, "0000")
                 for bid_level in self.bid_history[::-1]
-                if bid_level not in ['P', 'D', 'R']
+                if bid_level not in ["P", "D", "R"]
             ),
             None,
         )
 
-    def next_nt_bid(self, comment: str = '0000', raise_level: int = 0) -> Bid:
+    def next_nt_bid(self, comment: str = "0000", raise_level: int = 0) -> Bid:
         """Return the lowest possible bid in no trumps."""
         denomination = self.no_trumps
         return self.next_level_bid(denomination, comment, raise_level)
@@ -777,7 +832,7 @@ class Hand(Hand):
             and not self.is_jump(self.opener_bid_two, self.partner_last_bid)
         )
 
-    def advancer_preference(self, call_id: str = '0000') -> Bid:
+    def advancer_preference(self, call_id: str = "0000") -> Bid:
         """Respond after a 3 level bid make suit preference."""
         suit_one = self.overcaller_bid_one.denomination
         suit_two = self.overcaller_bid_two.denomination
@@ -799,30 +854,34 @@ class Hand(Hand):
 
     def unbid_four_card_major(self) -> Suit | None:
         """Return an unbid four card major or None."""
-        bid_suits = [Bid(bid).denomination
-                     for bid in self.bid_history if Bid(bid).is_suit_call]
-        if (self.hearts >= 4 and self.heart_suit not in bid_suits):
+        bid_suits = [
+            Bid(bid).denomination
+            for bid in self.bid_history
+            if Bid(bid).is_suit_call
+        ]
+        if self.hearts >= 4 and self.heart_suit not in bid_suits:
             return self.heart_suit
-        elif (self.spades >= 4 and self.spade_suit not in bid_suits):
+        elif self.spades >= 4 and self.spade_suit not in bid_suits:
             return self.spade_suit
         return None
 
     @staticmethod
     def quantitative_raise(
-            points: int,
-            base_level: int,
-            point_list: list[int],
-            maximum_level: int = 5) -> int:
+        points: int,
+        base_level: int,
+        point_list: list[int],
+        maximum_level: int = 5,
+    ) -> int:
         """
-            Return a bid based on a quantitative raise.
-            max raise is the number of elements in point_list 1, 2,3 or 4
-            scan the (reversed) points list until the points in
-            the hand exceeds the level
-            This shows whether it is a 3,2 or 1 raise etc.
+        Return a bid based on a quantitative raise.
+        max raise is the number of elements in point_list 1, 2,3 or 4
+        scan the (reversed) points list until the points in
+        the hand exceeds the level
+        This shows whether it is a 3,2 or 1 raise etc.
 
-            e.g.
-            level = self.quantitative_raise(points, 1, [6, 10, 13, 16], 5)
-            if points = 11 this raises level = 1+2 = 3.
+        e.g.
+        level = self.quantitative_raise(points, 1, [6, 10, 13, 16], 5)
+        if points = 11 this raises level = 1+2 = 3.
         """
         maximum_raise = len(point_list)
         point_list = list(reversed(point_list))
@@ -835,7 +894,7 @@ class Hand(Hand):
 
     def hand_value_points(self, bid_suit: Suit) -> int:
         """Return the hand value points for the given suit."""
-        return (self.hcp + self.support_shape_points(bid_suit))
+        return self.hcp + self.support_shape_points(bid_suit)
 
     def support_points(self, bidders_suit: Suit) -> int:
         """
@@ -863,12 +922,14 @@ class Hand(Hand):
     @property
     def ordered_holding(self) -> list[list[int]]:
         """Returns suits and holdings in decreasing order of holding
-            e.g. [[5, 1], [4, 0], [3, 2], [1, 3]].
+        e.g. [[5, 1], [4, 0], [3, 2], [1, 3]].
         """
-        holding = ([[self._spades, self.spade_suit],
-                    [self._hearts, self.heart_suit],
-                    [self._diamonds, self.diamond_suit],
-                    [self._clubs, self.club_suit]])
+        holding = [
+            [self._spades, self.spade_suit],
+            [self._hearts, self.heart_suit],
+            [self._diamonds, self.diamond_suit],
+            [self._clubs, self.club_suit],
+        ]
         holding.sort(reverse=True)
         return holding
 
@@ -899,12 +960,12 @@ class Hand(Hand):
 
     def has_sequence(self, suit) -> bool:
         """Return True if hand contains a three card sequence starting with
-            an honour."""
+        an honour."""
         cards = [card for card in self.cards if card.suit == suit]
         if len(cards) >= 3:
-            sequences = ['AKQ', 'KQJ', 'QJT', 'JT9', 'T98']
+            sequences = ["AKQ", "KQJ", "QJT", "JT9", "T98"]
             for index, card in enumerate(cards[2:]):
-                triple = cards[index].rank + cards[index+1].rank + card.rank
+                triple = cards[index].rank + cards[index + 1].rank + card.rank
                 if triple in sequences:
                     return True
         return False
@@ -916,43 +977,52 @@ class Hand(Hand):
     @staticmethod
     def _call_name(level, suit: Suit) -> str:
         """Return a call name form level and suit."""
-        return ''.join([str(level), suit])
+        return "".join([str(level), suit])
 
     def double_allowed(self):
-        bid_history = (['P', 'P', 'P'] + self.bid_history)[-3:]
-        if bid_history[-1] == 'D':
+        bid_history = (["P", "P", "P"] + self.bid_history)[-3:]
+        if bid_history[-1] == "D":
             return False
-        if (bid_history[-3] == 'P' and
-                bid_history[-2] == 'P' and
-                bid_history[-1] == 'P'):
+        if (
+            bid_history[-3] == "P"
+            and bid_history[-2] == "P"
+            and bid_history[-1] == "P"
+        ):
             return False
-        if (bid_history[-3] != 'P' and
-                bid_history[-2] == 'P' and
-                bid_history[-1] == 'P'):
+        if (
+            bid_history[-3] != "P"
+            and bid_history[-2] == "P"
+            and bid_history[-1] == "P"
+        ):
             return True
-        if (bid_history[-3] == 'P' and
-                bid_history[-2] != 'P' and
-                bid_history[-1] == 'P'):
+        if (
+            bid_history[-3] == "P"
+            and bid_history[-2] != "P"
+            and bid_history[-1] == "P"
+        ):
             return False
-        return bid_history[-2] == 'P' or bid_history[-1] != 'P'
+        return bid_history[-2] == "P" or bid_history[-1] != "P"
 
     def redouble_allowed(self):
-        bid_history = (['P', 'P', 'P'] + self.bid_history)[-3:]
-        if bid_history[-1] == 'D':
+        bid_history = (["P", "P", "P"] + self.bid_history)[-3:]
+        if bid_history[-1] == "D":
             return True
-        if (bid_history[-3] == 'D' and
-                bid_history[-2] == 'P' and
-                bid_history[-1]) == 'P':
+        if (
+            bid_history[-3] == "D"
+            and bid_history[-2] == "P"
+            and bid_history[-1]
+        ) == "P":
             return True
         return False
 
     def tracer(
-            self,
-            module: str,
-            get_frame: object,
-            trace_value: str = '',
-            display: bool = False,
-            trace_message: str = '') -> None:
+        self,
+        module: str,
+        get_frame: object,
+        trace_value: str = "",
+        display: bool = False,
+        trace_message: str = "",
+    ) -> None:
         """Log a trace."""
         if self.display_hand:
             self._print_hand()
@@ -960,19 +1030,21 @@ class Hand(Hand):
         if display:
             # 1. Build the trace list
             trace = get_trace(
-                self, module, get_frame, trace_value, trace_message)
+                self, module, get_frame, trace_value, trace_message
+            )
             logger.info(trace)
+            print(trace)
 
     def _print_hand(self) -> None:
         hand = self.__str__()
         if self.last_hand and hand != self.last_hand:
-            logger.info(f'{hand}, {self.hcp}, {self.shape} {self.hcp=}')
+            logger.info(f"{hand}, {self.hcp}, {self.shape} {self.hcp=}")
             self._set_trace_hand()
         self.last_hand = hand
 
     def force_trace(self) -> str | bool:
         with contextlib.suppress(FileNotFoundError, NotADirectoryError):
-            with open(TRACE_PATH, 'r') as f_trace:
+            with open(TRACE_PATH) as f_trace:
                 if f_trace.read():
                     return True
         return False
@@ -986,15 +1058,16 @@ class Hand(Hand):
         """Return the name of the module to trace."""
         if not os.path.isfile(MODULE_TRACE):
             return (None, None)
-        with open(MODULE_TRACE, 'r') as f_trace_file:
+        with open(MODULE_TRACE) as f_trace_file:
             text = f_trace_file.read()
-            text = text.split('\n')
-            text.extend(['', ''])
+            text = text.split("\n")
+            text.extend(["", ""])
             return (text[0], text[1])
 
     def _set_trace_hand(self) -> None:
         """Write the current hand to the trace file."""
         if os.path.isfile(MODULE_TRACE):
-            with open(MODULE_TRACE, 'w') as f_trace_file:
+            with open(MODULE_TRACE, "w") as f_trace_file:
                 f_trace_file.write(
-                    '\n'.join([self.trace_module, self.__str__()]))
+                    "\n".join([self.trace_module, self.__str__()])
+                )
